@@ -1,0 +1,1130 @@
+/* বাটন, ইনপুট এবং সিলেক্ট বক্সে আধুনিক স্পষ্ট বাংলা ফন্ট নিশ্চিত করার জন্য */
+button, 
+input, 
+select, 
+textarea, 
+.btn, 
+.sub-tab-btn, 
+.filter-btn {
+    font-family: 'Anek Bangla', 'Hind Siliguri', 'Noto Sans Bengali', sans-serif !important;
+}
+
+/* মোবাইল স্ক্রিনে রশিদের টেবিল লেআউট ঠিক রাখার জন্য অতিরিক্ত সিএসএস */
+@media (max-width: 768px) {
+    .receipt-card table {
+        display: table !important;
+        width: 100% !important;
+    }
+    .receipt-card tr {
+        display: table-row !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+    .receipt-card th, .receipt-card td {
+        display: table-cell !important;
+        text-align: left !important;
+        padding: 6px !important;
+    }
+    /* রশিদের মোবাইলের ডেটা-লেবেলের ছদ্ম-উপাদান (pseudo-elements) এড়ানো */
+    .receipt-card td::before, .receipt-card th::before {
+        content: "" !important;
+        display: none !important;
+    }
+}
+
+/* স্কেলিটন বেস স্টাইল এবং শিমার অ্যানিমেশন */
+.skeleton {
+    background: #e2e8f0;
+    background-image: linear-gradient(
+        90deg,
+        #e2e8f0 25%,
+        #f1f5f9 50%,
+        #e2e8f0 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+    border-radius: var(--radius-sm, 6px);
+    display: inline-block;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* A5 সাইজের জন্য পিডিএফ স্টাইল */
+.pdf-large-size {
+    width: 100% !important;
+    max-width: 100% !important;    /* A5 এর জন্য ফুল প্রস্থ */
+    height: auto !important;
+    padding: 16px 14px !important;
+    margin: 0 auto !important;
+    border: 2px double #15803d !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    border-radius: 10px !important;
+    overflow: visible !important;
+}
+
+/* A5 সাইজের জন্য ফন্ট সাইজ সামান্য ছোট */
+.pdf-large-size table {
+    font-size: 11.5px !important;
+}
+
+.pdf-large-size table th, 
+.pdf-large-size table td {
+    padding: 6px 6px !important;
+}
+
+:root {
+    --primary: #1e40af; /* আবাবিল রয়্যাল ব্লু */
+    --primary-hover: #1d4ed8; 
+    --secondary: #0f172a; /* গাঢ় স্লেট / নেভি */
+    --secondary-hover: #1e293b;
+    --success: #10b981; 
+    --warning: #f59e0b; 
+    --danger: #ef4444; 
+    --bg-main: #f8fafc; 
+    --bg-card: #ffffff; 
+    --text-main: #0f172a; 
+    --text-muted: #64748b; 
+    --border: #cbd5e1; 
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --shadow: 0 4px 12px rgba(30, 64, 175, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+    --shadow-lg: 0 12px 24px rgba(30, 64, 175, 0.07), 0 4px 8px rgba(0, 0, 0, 0.03);
+}
+
+body { 
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    background-color: var(--bg-main); 
+    color: var(--text-main); 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ব্লাড ব্যাংক লাল থিম স্টাইল */
+#bloodBankSection .section-header {
+    border-bottom: 2px solid var(--danger) !important;
+}
+#bloodBankSection .section-header h2 {
+    color: var(--danger) !important;
+}
+#bloodBankSection .filter-btn:hover, 
+#bloodBankSection .filter-btn.active {
+    background-color: var(--danger) !important;
+    border-color: var(--danger) !important;
+    color: white !important;
+}
+#bloodBankSection .search-input:focus {
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+#bloodBankSection .summary-card.target-due-bg {
+    background: linear-gradient(135deg, #991b1b, #ef4444) !important;
+}
+#bloodBankSection .data-table th {
+    background-color: #ffe4e6 !important;
+    color: #f50505 !important;
+}
+#bloodBankSection .badge-blood {
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+#bloodBankSection .btn-primary {
+    background-color: var(--danger) !important;
+}
+#bloodBankSection .btn-primary:hover {
+    background-color: #b91c1c !important;
+}
+
+/* হেডার ও নেভিগেশন */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding-top: 68px;
+    padding-bottom: 64px; 
+}
+
+header { 
+    background-color: var(--bg-card);
+    border-bottom: 1.5px solid var(--border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 68px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-sizing: border-box;
+    box-shadow: var(--shadow);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-logo { 
+    width: 40px; 
+    height: 40px; 
+    border-radius: 50%; 
+    object-fit: cover;
+}
+
+header h1 { 
+    font-size: 18px; 
+    font-weight: 700; 
+    margin: 0; 
+    color: var(--text-main);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-btn-group {
+    display: flex;
+    gap: 6px;
+}
+
+.nav-icon-btn {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: var(--bg-card);
+    color: var(--text-muted);
+}
+
+.nav-icon-btn:hover:not(.btn-disabled) {
+    background-color: #eff6ff; 
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.nav-icon-btn.btn-disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+.btn-menu-toggle {
+    background-color: var(--primary) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-menu-toggle:hover {
+    background-color: var(--primary-hover) !important;
+}
+
+/* মূল কন্টেন্ট এরিয়া */
+.content-area { 
+    flex: 1; 
+    padding: 20px 16px; 
+    max-width: 1100px; 
+    width: 100%; 
+    margin: 0 auto; 
+    box-sizing: border-box; 
+}
+
+/* হোম পেজ */
+#homeView {
+    text-align: center;
+    padding: 24px 0;
+}
+
+.hero-title {
+    color: var(--primary);
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.hero-subtitle {
+    color: var(--secondary);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+}
+
+.hero-location {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 30px;
+}
+
+/* ৩-কলাম রেসপন্সিভ গ্যালারি */
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.gallery-img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.gallery-img:hover {
+    transform: scale(1.04);
+    box-shadow: 0 8px 20px rgba(30, 64, 175, 0.15); 
+}
+
+/* CARD THEMES */
+.dashboard-section { 
+    display: none; 
+    animation: fadeIn 0.35s ease-out forwards; 
+    text-align: left; 
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.section-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--secondary);
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.summary-card { 
+    padding: 16px; 
+    border-radius: var(--radius-md); 
+    color: white;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-card .card-title { 
+    font-size: 12px; 
+    font-weight: 600;
+    opacity: 0.95; 
+}
+
+.summary-card .card-amount { 
+    font-size: 24px; 
+    font-weight: 800; 
+}
+
+.income-card-bg { background: linear-gradient(135deg, var(--secondary), #334155); }
+.expense-card-bg { background: linear-gradient(135deg, #475569, #1e293b); } 
+.target-paid-bg { background: linear-gradient(135deg, #059669, #047857); }
+.target-due-bg { background: linear-gradient(135deg, #1e3a8a, #1d4ed8); } 
+.target-total-bg { background: linear-gradient(135deg, #0284c7, #0369a1); }
+
+/* ফরম কন্টেইনার ও মোবাইল ফ্রেন্ডলি ফরম সেকশন কার্ড */
+.card-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+}
+
+.form-section-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary);
+}
+
+.form-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 16px;
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-grid { 
+    display: grid; 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 12px; 
+    margin-bottom: 16px; 
+}
+
+.form-group { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px;
+}
+
+.form-group label { 
+    font-weight: 700; 
+    color: var(--secondary); 
+    font-size: 13px; 
+}
+
+.form-group input, .form-group select, .form-group textarea { 
+    padding: 11px 12px; 
+    border: 1.5px solid var(--border); 
+    border-radius: var(--radius-sm); 
+    font-size: 14px; 
+    outline: none; 
+    font-family: inherit; 
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.form-group input:focus, .form-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.12); 
+}
+
+.form-group input[readonly] { 
+    background-color: #f8fafc; 
+    color: var(--text-muted); 
+    cursor: not-allowed; 
+}
+
+.same-address-label { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px; 
+    font-size: 13px; 
+    font-weight: 700; 
+    color: var(--primary); 
+    cursor: pointer; 
+    margin-top: 4px; 
+}
+
+/* অঙ্গীকারনামা */
+.pledge-container { 
+    background-color: #f8fafc; 
+    border: 1px solid var(--border); 
+    border-radius: var(--radius-sm); 
+    padding: 14px; 
+    margin-bottom: 16px; 
+}
+
+.pledge-title { 
+    font-weight: 700; 
+    color: var(--primary); 
+    font-size: 14px; 
+    margin-bottom: 6px; 
+    border-bottom: 1px dashed var(--border); 
+    padding-bottom: 4px; 
+}
+
+.pledge-text { 
+    font-size: 13px; 
+    color: var(--text-main); 
+    line-height: 1.6; 
+    text-align: justify; 
+    margin-bottom: 10px; 
+}
+
+.pledge-text mark { 
+    background-color: #e0f2fe; 
+    color: var(--primary); 
+    padding: 2px 4px; 
+    border-radius: 4px; 
+    font-weight: 700; 
+}
+
+.pledge-checkbox-label { 
+    display: flex; 
+    align-items: flex-start; 
+    gap: 8px; 
+    font-size: 13px; 
+    font-weight: 700; 
+    color: var(--primary-hover); 
+    cursor: pointer; 
+}
+
+/* বোতামসমূহ */
+.btn {
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-primary { background-color: var(--primary); color: white; }
+.btn-primary:hover:not(:disabled) { background-color: var(--primary-hover); }
+.btn-secondary { background-color: var(--secondary); color: white; }
+.btn-secondary:hover:not(:disabled) { background-color: var(--secondary-hover); }
+.btn-danger { background-color: var(--danger); color: white; }
+.btn-danger:hover:not(:disabled) { background-color: #ef4444; }
+
+.btn:disabled {
+    background-color: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.btn-large {
+    padding: 12px;
+    width: 100%;
+    font-size: 15px;
+}
+
+/* সার্চ ও ফিল্টার কন্টেইনার */
+.controls-panel {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.search-box-container {
+    width: 100%;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    outline: none;
+    box-sizing: border-box;
+    background-color: var(--bg-main);
+}
+
+.search-input:focus {
+    border-color: var(--primary);
+    background-color: var(--bg-card);
+}
+
+.filter-buttons { 
+    display: flex; 
+    gap: 6px; 
+    width: 100%;
+}
+
+.filter-btn { 
+    flex: 1;
+    text-align: center;
+    background-color: var(--bg-main); 
+    color: var(--text-muted); 
+    border: 1.5px solid var(--border); 
+    padding: 8px; 
+    border-radius: var(--radius-sm); 
+    font-weight: 700; 
+    font-size: 12px;
+    cursor: pointer; 
+    transition: all 0.2s;
+}
+
+.filter-btn:hover, .filter-btn.active { 
+    background-color: var(--primary); 
+    color: white; 
+    border-color: var(--primary);
+}
+
+/* অ্যাকর্ডিয়ন */
+.accordion-item {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.accordion-header { 
+    padding: 14px; 
+    font-size: 14.5px; 
+    font-weight: 700; 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--border);
+    color: var(--secondary);
+}
+
+.accordion-content { 
+    display: none; 
+    padding: 12px;
+}
+
+/* মোবাইল ফ্রেন্ডলি ডাটা টেবিল */
+.table-responsive { 
+    border-radius: var(--radius-sm); 
+    border: 1px solid var(--border);
+    overflow: visible; 
+}
+
+.data-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 13.5px; 
+}
+
+.data-table th, .data-table td { 
+    padding: 12px; 
+    border-bottom: 1px solid var(--border); 
+    text-align: center; 
+}
+
+.data-table th { 
+    background-color: #eff6ff; 
+    color: var(--primary); 
+    font-weight: 700;
+}
+
+.clickable-name { 
+    color: var(--primary); 
+    cursor: pointer; 
+    text-decoration: underline; 
+    font-weight: 700; 
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.badge-success { background-color: #d1fae5; color: #065f46; }
+.badge-warning { background-color: #fee2e2; color: #b91c1c; }
+.badge-info { background-color: #e0f2fe; color: #0369a1; }
+.badge-blood { background-color: #ffe4e6; color: #b91c1c; font-weight: 800; }
+
+/* ৩-ডট অ্যাকশন মেনু */
+.action-dropdown { position: relative; display: inline-block; }
+.three-dots-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted); padding: 4px 8px; }
+.dropdown-menu-content { 
+    display: none; 
+    position: absolute; 
+    right: 0; 
+    top: 100%; 
+    background-color: var(--bg-card); 
+    min-width: 110px; 
+    box-shadow: var(--shadow-lg); 
+    border-radius: var(--radius-sm); 
+    z-index: 100; 
+    border: 1.5px solid var(--border); 
+}
+.dropdown-menu-content button { 
+    color: var(--text-main); 
+    padding: 8px 12px; 
+    display: block; 
+    width: 100%; 
+    border: none; 
+    background: none; 
+    font-family: inherit; 
+    font-size: 13px; 
+    font-weight: 700; 
+    text-align: left; 
+    cursor: pointer; 
+}
+.dropdown-menu-content button:hover { background-color: #eff6ff; }
+.dropdown-menu-content button.btn-edit { color: var(--primary); } 
+.dropdown-menu-content button.btn-delete { color: var(--danger); } 
+.action-dropdown.show .dropdown-menu-content { display: block; }
+
+/* ডিজিটাল রশিদ */
+.receipt-card { 
+    background: #ffffff; 
+    padding: 16px; 
+    border-radius: var(--radius-sm); 
+    box-shadow: var(--shadow); 
+    max-width: 650px; 
+    margin: 10px auto; 
+    border: 3px double #15803d; 
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* পপআপ মডাল */
+.modal { 
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(15, 23, 42, 0.5); 
+    z-index: 2000; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 12px; 
+    box-sizing: border-box; 
+    backdrop-filter: blur(2px);
+}
+
+.modal-content { 
+    background-color: var(--bg-card); 
+    max-width: 500px; 
+    width: 100%; 
+    padding: 20px; 
+    border-radius: var(--radius-md); 
+    box-shadow: var(--shadow-lg); 
+    position: relative; 
+    max-height: 85vh; 
+    overflow-y: auto; 
+}
+
+.close-modal-btn { 
+    position: absolute; 
+    top: 12px; 
+    right: 16px; 
+    font-size: 24px; 
+    color: var(--text-muted); 
+    cursor: pointer; 
+}
+
+.profile-card-header { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    border-bottom: 1.5px solid var(--border); 
+    padding-bottom: 12px; 
+    margin-bottom: 12px; 
+}
+
+.profile-avatar { 
+    width: 56px; 
+    height: 56px; 
+    background-color: #eff6ff; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 24px; 
+    border: 2px solid var(--primary); 
+}
+
+.profile-info h3 { margin: 0; color: var(--primary); font-size: 18px; }
+.profile-info p { margin: 2px 0; color: var(--text-muted); font-size: 12.5px; }
+
+.months-grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 8px; 
+    margin-top: 10px; 
+}
+
+.month-card { 
+    background-color: var(--bg-main); 
+    border: 1.5px solid var(--border); 
+    border-radius: var(--radius-sm); 
+    padding: 8px; 
+    text-align: center; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+}
+
+.month-card.paid { 
+    background-color: #d1fae5; 
+    border-color: #10b981; 
+    color: #065f46; 
+}
+
+.month-name { font-weight: 700; font-size: 12px; }
+.month-amount { font-size: 11px; color: var(--text-muted); }
+
+/* সাইডবার মেনু */
+.popup-menu { 
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(15, 23, 42, 0.4); 
+    z-index: 5000; 
+}
+
+.popup-content { 
+    background-color: var(--secondary); 
+    width: 270px; 
+    height: 100%; 
+    position: fixed; 
+    right: 0; 
+    top: 0; 
+    padding: 20px; 
+    box-sizing: border-box; 
+    box-shadow: var(--shadow-lg);
+}
+
+.close-btn { font-size: 26px; cursor: pointer; color: white; float: right; }
+.popup-content h3 { color: white; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-top: 8px; font-size: 16px; }
+.popup-content ul { list-style: none; padding: 0; margin-top: 16px; }
+.popup-content ul li a { 
+    color: rgba(255, 255, 255, 0.85); 
+    font-size: 14.5px; 
+    text-decoration: none; 
+    font-weight: 600; 
+    display: block; 
+    padding: 10px; 
+    border-radius: var(--radius-sm); 
+}
+.popup-content ul li a:hover, .popup-content ul li a.active { 
+    color: white; 
+    background-color: var(--primary); 
+}
+
+/* স্টিকি বটম নেভিগেশন */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: var(--bg-card);
+    border-top: 1.5px solid var(--border);
+    z-index: 999;
+    box-shadow: 0 -4px 10px rgba(30, 64, 175, 0.03);
+    justify-content: space-around;
+    align-items: center;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 2px;
+    flex: 1;
+    height: 100%;
+}
+
+.bottom-nav-item.active {
+    color: var(--primary);
+}
+
+.bottom-nav-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* লাল ব্যাকগ্রাউন্ড ও লাল টেক্সট */
+.receipt-status-send { 
+    background-color: #fee2e2; 
+    color: #b91c1c; 
+    border: 1px solid #fca5a5; 
+    cursor: pointer; 
+    font-weight: 700; 
+    font-size: 11px; 
+    padding: 4px 8px; 
+    border-radius: var(--radius-sm); 
+    display: inline-block;
+    transition: all 0.2s;
+}
+.receipt-status-send:hover {
+    background-color: #fca5a5;
+}
+
+/* সবুজ ব্যাকগ্রাউন্ড ও সবুজ টেক্সট */
+.receipt-status-sent { 
+    background-color: #d1fae5; 
+    color: #065f46; 
+    border: 1px solid #a7f3d0; 
+    font-weight: 700; 
+    font-size: 11px; 
+    padding: 4px 8px; 
+    border-radius: var(--radius-sm); 
+    cursor: pointer;
+    display: inline-block;
+}
+
+footer { 
+    background-color: var(--secondary); 
+    color: #94a3b8; 
+    padding: 18px; 
+    font-size: 12px; 
+    margin-top: auto; 
+    line-height: 1.6; 
+    text-align: center; 
+}
+
+/* গ্রাফ কন্টেইনার স্টাইল */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 16px;
+    margin: 24px auto;
+    max-width: 900px;
+}
+
+.chart-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s;
+    animation: fadeIn 1.2s ease-out forwards;
+}
+
+.chart-container:hover {
+    transform: translateY(-3px);
+}
+
+.chart-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--secondary);
+    margin-bottom: 12px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* মোবাইল স্ক্রিন অপ্টিমাইজেশন */
+@media (max-width: 768px) {
+    .app-container {
+        padding-top: 60px;
+        padding-bottom: 60px;
+    }
+
+    header {
+        height: 60px;
+        padding: 0 12px;
+    }
+
+    header h1 {
+        font-size: 14.5px;
+    }
+
+    .content-area {
+        padding: 12px 8px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .months-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .mobile-bottom-nav {
+        display: flex;
+    }
+
+    .hero-title {
+        font-size: 24px;
+    }
+
+    .data-table, .data-table tbody, .data-table tr, .data-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .data-table thead {
+        display: none;
+    }
+    .data-table tr {
+        margin-bottom: 8px; 
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 5px 10px; 
+        box-shadow: var(--shadow);
+        overflow: visible !important; 
+    }
+    .data-table td {
+        text-align: left !important;
+        padding: 2px 0; 
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px; 
+    }
+    .data-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-right: 8px;
+    }
+    .data-table td .action-dropdown {
+        margin-left: auto;
+    }
+}
+
+/* 📊 আয়ের সাব-ট্যাব বাটনের কাস্টম স্টাইল */
+.sub-tab-btn {
+    flex: 1;
+    background-color: #ffffff !important;
+    color: var(--primary) !important;
+    border: 1.5px solid var(--primary) !important;
+    padding: 11px 16px;
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* মাউস হোভার করলে হালকা নীল আবাহ আসবে */
+.sub-tab-btn:hover {
+    background-color: #eff6ff !important;
+}
+
+/* সিলেক্টেড/অ্যাক্টিভ অবস্থায় নীল ব্যাকগ্রাউন্ড ও সাদা টেক্সট হবে */
+.sub-tab-btn.active {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    border: 1.5px solid var(--primary) !important;
+}
+
+/* ==================================================
+   🌟 আবাবিল ফাউন্ডেশন ডাইনামিক অ্যানিমেশন স্টাইলসমূহ
+   ================================================== */
+
+/* ১. হিরো ব্যানার প্রবেশদ্বার অ্যানিমেশন */
+@keyframes heroEntrance {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.hero-banner {
+    animation: heroEntrance 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ২. মসৃণ স্ক্রল ও লোড ফেড-ইন অ্যানিমেশন বেস */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: transform, opacity;
+}
+
+.reveal-on-scroll.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ৩. কার্ডসমূহের ওপর মাউস হোভার ইফেক্ট (স্মুথ লিফট ও শ্যাডো) */
+#homeView .card-container, 
+#homeView .image-gallery > div {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.4s ease !important;
+}
+
+#homeView .card-container:hover, 
+#homeView .image-gallery > div:hover {
+    transform: translateY(-6px) scale(1.02) !important;
+    box-shadow: 0 14px 28px rgba(30, 64, 175, 0.12) !important;
+    border-color: var(--primary) !important;
+}
+
+/* ছবির ওপর হালকা জুম ইফেক্ট */
+.image-gallery img {
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.image-gallery > div:hover img {
+    transform: scale(1.05) !important;
+}
+/* হিরো ব্যানারের টেক্সটগুলোর ধাপে ধাপে ভেসে ওঠার অ্যানিমেশন */
+@keyframes fadeInUpHero {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    opacity: 0;
+    animation: fadeInUpHero 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
