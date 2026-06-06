@@ -57,10 +57,10 @@
             <div id="homeView">
                 
                 <!-- ১. প্রফেশনাল হিরো ব্যানার সেকশন -->
-                <div class="hero-banner" style="background: linear-gradient(rgba(0, 0, 0, 0.775), rgba(1, 1, 3, 0.742)), url('image/img1.jpg') no-repeat center center/cover; padding: 65px 20px; color: white; border-radius: var(--radius-md); margin-bottom: 24px; text-align: center; box-shadow: var(--shadow-lg); overflow: hidden;">
+                <div class="hero-banner" style="background: linear-gradient(rgba(22, 40, 205, 0.607), rgba(34, 34, 201, 0.667)), url('image/img1.jpg') no-repeat center center/cover; padding: 65px 20px; color: white; border-radius: var(--radius-md); margin-bottom: 24px; text-align: center; box-shadow: var(--shadow-lg); overflow: hidden;">
                     
                     <!-- ১. মোটো/প্রত্যয় (সবার উপরে) - ০.২ সেকেন্ড পর আসবে -->
-                    <p class="hero-motto" style="color: #1fd53a; font-size: 15px; font-weight: 700; margin-top: 0; margin-bottom: 10px; letter-spacing: 2px;">প্রত্যয় • সেবা • অঙ্গীকার • পরিবর্তন</p>
+                    <p class="hero-motto" style="color: #00ff26; font-size: 15px; font-weight: 700; margin-top: 0; margin-bottom: 10px; letter-spacing: 2px;">প্রত্যয় • সেবা • অঙ্গীকার • পরিবর্তন</p>
                     
                     <!-- ২. মূল নাম (আবাবিল ফাউন্ডেশন) - ০.৪ সেকেন্ড পর আসবে -->
                     <h1 class="hero-title animate-fade-in-up" style="color: #ffffff; font-size: 34px; font-weight: 800; margin-top: 0; margin-bottom: 6px; letter-spacing: 1px; animation-delay: 0.4s;">আবাবিল ফাউন্ডেশন</h1>
@@ -1048,16 +1048,20 @@
                         <input type="date" id="expDate" required>
                     </div>
                     <div class="form-group">
-                        <label>ব্যয়ের খাত / বিবরণ:</label>
-                        <input type="text" id="expSector" required placeholder="বিবরণী">
+                        <label>প্রজেক্টের নাম:</label>
+                        <input type="text" id="expProject" placeholder="যেমন: ঈদ প্রজেক্ট ২০২৬, চিকিৎসা ইত্যাদি">
                     </div>
                     <div class="form-group">
-                        <label>অনুমোদনকারী:</label>
-                        <input type="text" id="expApprovedBy" required placeholder="অনুমোদনকারী">
+                        <label>ব্যয়ের বিবরণ:</label>
+                        <input type="text" id="expSector" required placeholder="বিবরণী">
                     </div>
                     <div class="form-group">
                         <label>ব্যয়ের পরিমাণ (টাকা):</label>
                         <input type="number" id="expAmount" required placeholder="টাকা">
+                    </div>
+                    <div class="form-group">
+                        <label>অনুমোদনকারী:</label>
+                        <input type="text" id="expApprovedBy" required placeholder="অনুমোদনকারী">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-danger btn-large" style="margin-top: 14px;">💾 সংরক্ষণ করুন</button>
@@ -1081,16 +1085,20 @@
                         <input type="date" id="editExpDate" required>
                     </div>
                     <div class="form-group">
-                        <label>ব্যয়ের খাত / বিবরণ:</label>
-                        <input type="text" id="editExpSector" required placeholder="বিবরণী">
+                        <label>প্রজেক্টের নাম:</label>
+                        <input type="text" id="editExpProject" placeholder="প্রজেক্টের নাম">
                     </div>
                     <div class="form-group">
-                        <label>অনুমোদনকারী:</label>
-                        <input type="text" id="editExpApprovedBy" required placeholder="অনুমোদনকারী">
+                        <label>ব্যয়ের বিবরণ:</label>
+                        <input type="text" id="editExpSector" required placeholder="বিবরণী">
                     </div>
                     <div class="form-group">
                         <label>ব্যয়ের পরিমাণ (টাকা):</label>
                         <input type="number" id="editExpAmount" required placeholder="টাকা">
+                    </div>
+                    <div class="form-group">
+                        <label>অনুমোদনকারী:</label>
+                        <input type="text" id="editExpApprovedBy" required placeholder="অনুমোদনকারী">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-danger btn-large" style="margin-top: 14px;">💾 আপডেট সংরক্ষণ করুন</button>
@@ -1122,8 +1130,12 @@
                         <input type="text" id="donAddress" required placeholder="ঠিকানা">
                     </div>
                     <div class="form-group">
-                        <label>мобাইল:</label>
+                        <label>মোবাইল:</label>
                         <input type="tel" id="donPhone" placeholder="01XXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>প্রজেক্টের নাম:</label>
+                        <input type="text" id="donProject" placeholder="যেমন: ইফতার প্রজেক্ট, বন্যা ত্রাণ ইত্যাদি">
                     </div>
                     <div class="form-group">
                         <label>আয়ের বিবরণ:</label>
@@ -1152,6 +1164,10 @@
                     <div class="form-group">
                         <label>তারিখ:</label>
                         <input type="date" id="genDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>প্রজেক্টের নাম:</label>
+                        <input type="text" id="genProject" placeholder="যেমন: মসজিদ ফান্ড, সাধারণ সাহায্য ইত্যাদি">
                     </div>
                     <div class="form-group">
                         <label>খাত বিবরণী:</label>
@@ -1183,7 +1199,7 @@
                         <input type="date" id="editDonDate" required>
                     </div>
                     <div class="form-group">
-                        <label>দাতার নাম / উৎস:</label>
+                        <label>দাতার নাম:</label>
                         <input type="text" id="editDonName" required>
                     </div>
                     <div class="form-group">
@@ -1195,7 +1211,11 @@
                         <input type="tel" id="editDonPhone">
                     </div>
                     <div class="form-group">
-                        <label>আয়ের খাত / বিবরণ:</label>
+                        <label>প্রজেক্টের নাম:</label>
+                        <input type="text" id="editDonProject" placeholder="প্রজেক্টের নাম">
+                    </div>
+                    <div class="form-group">
+                        <label>আয়ের বিবরণ:</label>
                         <input type="text" id="editDonSector" required>
                     </div>
                     <div class="form-group">
