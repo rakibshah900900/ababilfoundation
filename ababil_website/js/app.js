@@ -910,33 +910,35 @@ async function saveDonationEntry(event) {
     const phone = document.getElementById('donPhone').value;
     const amount = parseInt(document.getElementById('donAmount').value) || 0;
     const sector = document.getElementById('donSector').value;
-    
+    const project = document.getElementById('donProject').value; // <--- নতুন লাইন
+
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
 
     const entry = {
         receiptNo: receiptNo, date: dateStr, name: name, address: address,
-        phone: phone, amount: amount, sector: sector
+        phone: phone, amount: amount, sector: sector, project: project // <--- নতুন ফিল্ড
     };
 
     showCustomPopup("⏳", "আয়ের খাত ডাটাবেজে যাচ্ছে...", false);
     try {
-        const { error } = await supabaseClient
-            .from('donations')
-            .insert([entry]);
-        if (error) throw error;
+            const { error } = await supabaseClient
+                .from('donations')
+                .insert([entry]);
+            if (error) throw error;
 
-        // ১. নতুন রশিদের স্ট্যাটাস প্রথমে লাল (রশিদ পাঠান/false) করা হলো
-        donationReceiptsStatus[receiptNo] = false; 
-        
-        // ২. রশিদ কাউন্টার বাড়ানো হলো
-        globalReceiptCounter++; 
+            // ১. নতুন রশিদের স্ট্যাটাস প্রথমে লাল (রশিদ পাঠান/false) করা হলো এবং লোকাল স্টোরেজে সেভ করা হলো
+            donationReceiptsStatus[receiptNo] = false; 
+            localStorage.setItem('ababil_donation_receipt_status', JSON.stringify(donationReceiptsStatus));
+            
+            // ২. রশিদ কাউন্টার বাড়ানো হলো
+            globalReceiptCounter++; 
 
-        // ৩. এবার ডাটাবেজ থেকে রিয়েল-টাইমে রিলোড করা হচ্ছে
-        await loadAllDataFromSupabase();
+            // ৩. এবার ডাটাবেজ থেকে রিয়েল-টাইমে রিলোড করা হচ্ছে
+            await loadAllDataFromSupabase();
 
-        closeDonationModal();
-        closeCustomPopup();
+            closeDonationModal();
+            closeCustomPopup();
         
         showCustomPopup("✅", "আয়ের খাত সফলভাবে এন্ট্রি হয়েছে।", true);
     } catch (err) {
@@ -2063,10 +2065,10 @@ function renderExpenseTable() {
             const voucherNoVal = entry.voucherno || "---";
             const approvedByVal = entry.approvedby || "---";
             adminHtml += `<tr>
-                <td data-label="ভাউচার নং"><span style="color:var(--primary); font-weight:bold;">${voucherNoVal}</span></td>
-                <td data-label="তারিখ">${entry.date}</td>
-                <td data-label="ব্যয়ের খাত"><strong>${entry.sector}</strong></td>
-                <td data-label="অনুমোদনকারী">${approvedByVal}</td>
+                        <td data-label="ভাউচার নং"><span style="color:var(--primary); font-weight:bold;">${voucherNoVal}</span></td>
+                        <td data-label="তারিখ">${entry.date}</td>
+                        <td data-label="ব্যয়ের খাত"><strong>${entry.sector}</strong><br><small style="color:var(--text-muted); font-size:11px;">প্রজেক্ট: ${entry.project || '---'}</small></td>
+                        <td data-label="অনুমোদনকারী">${approvedByVal}</td>
                 <td data-label="পরিমাণ" style="font-weight:bold; color:var(--primary);">${entry.amount}/-</td>
                 <td data-label="অবস্থা"><span class="badge badge-warning">অনুমোদিত</span></td>
                 <td data-label="অ্যাকশন">
@@ -2097,6 +2099,7 @@ function editExpenseEntry(index) {
         document.getElementById('editExpSector').value = entry.sector;
         document.getElementById('editExpApprovedBy').value = approvedByVal;
         document.getElementById('editExpAmount').value = entry.amount;
+        document.getElementById('editExpProject').value = entry.project || ""; // প্রজেক্ট এডিটের জন্য সেট করা হলো
         
         let rawDate = entry.date; 
         let formattedDate = "";
@@ -2132,11 +2135,12 @@ async function saveEditedExpenseEntry(event) {
     const sector = document.getElementById('editExpSector').value;
     const approvedBy = document.getElementById('editExpApprovedBy').value;
     const amount = parseInt(document.getElementById('editExpAmount').value) || 0;
+    const project = document.getElementById('editExpProject').value; // নতুন ভ্যালু রিড
     
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
 
-    showCustomPopup("⏳", "ব্যয় সংশোধন ক্লাউডে সংরক্ষিত হচ্ছে...", false);
+    showCustomPopup("⏳", "ব্যয় সংশোধন ক্লাউডে সংরক্ষিত হচ্ছে...", false);
     try {
         const { error } = await supabaseClient
             .from('expenses')
@@ -2144,7 +2148,8 @@ async function saveEditedExpenseEntry(event) {
                 date: dateStr, 
                 sector: sector,
                 approvedby: approvedBy, 
-                amount: amount
+                amount: amount,
+                project: project // ডাটাবেজে প্রজেক্ট কলাম আপডেট
             })
             .eq('voucherno', voucherNo);
             
@@ -2154,6 +2159,7 @@ async function saveEditedExpenseEntry(event) {
         expenseEntries[selectedExpenseIndex].sector = sector;
         expenseEntries[selectedExpenseIndex].approvedby = approvedBy;
         expenseEntries[selectedExpenseIndex].amount = amount;
+        expenseEntries[selectedExpenseIndex].project = project; // লোকাল অ্যারে আপডেট
 
         closeEditExpenseModal();
         closeCustomPopup();
@@ -2195,6 +2201,7 @@ async function saveExpenseEntry(event) {
     const sector = document.getElementById('expSector').value;
     const approvedBy = document.getElementById('expApprovedBy').value;
     const amount = parseInt(document.getElementById('expAmount').value) || 0;
+    const project = document.getElementById('expProject').value; // নতুন ভ্যালু রিড
     
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
@@ -2204,7 +2211,8 @@ async function saveExpenseEntry(event) {
         date: dateStr, 
         sector: sector,
         approvedby: approvedBy, 
-        amount: amount
+        amount: amount,
+        project: project // প্রজেক্ট ফিল্ড যুক্ত
     };
 
     showCustomPopup("⏳", "ব্যয় এন্ট্রি ক্লাউডে সংরক্ষিত হচ্ছে...", false);
@@ -2278,6 +2286,7 @@ function editDonationEntry(index) {
     setSafeValue('editDonPhone', entry.phone || '');
     setSafeValue('editDonAmount', entry.amount || '');
     setSafeValue('editDonSector', entry.sector || '');
+    setSafeValue('editDonProject', entry.project || ''); // প্রজেক্ট ফিল্ড এডিটের জন্য সেট করা হলো
 
     let formattedDate = "";
     if (entry.date) {
@@ -2313,6 +2322,7 @@ async function saveEditedDonationEntry(event) {
     const phone = document.getElementById('editDonPhone').value;
     const amount = parseInt(document.getElementById('editDonAmount').value) || 0;
     const sector = document.getElementById('editDonSector').value;
+    const project = document.getElementById('editDonProject').value; // নতুন ভ্যালু রিড
 
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
@@ -2327,7 +2337,8 @@ async function saveEditedDonationEntry(event) {
                 address: address,
                 phone: phone,
                 amount: amount,
-                sector: sector
+                sector: sector,
+                project: project // ডাটাবেজে আপডেট
             })
             .eq('receiptNo', receiptNo);
 
@@ -2339,6 +2350,7 @@ async function saveEditedDonationEntry(event) {
         donationEntries[selectedDonationIndex].phone = phone;
         donationEntries[selectedDonationIndex].amount = amount;
         donationEntries[selectedDonationIndex].sector = sector;
+        donationEntries[selectedDonationIndex].project = project; // লোকাল অ্যারে আপডেট
 
         closeEditDonationModal();
         closeCustomPopup();
@@ -2465,6 +2477,7 @@ async function saveGeneralIncomeEntry(event) {
     const rawDate = document.getElementById('genDate').value; 
     const sourceDesc = document.getElementById('genSourceDesc').value;
     const amount = parseInt(document.getElementById('genAmount').value) || 0;
+    const project = document.getElementById('genProject').value; // <--- নতুন লাইন
     
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
@@ -2476,7 +2489,8 @@ async function saveGeneralIncomeEntry(event) {
         address: "সাধারণ তহবিল",
         phone: "---", 
         amount: amount, 
-        sector: "সাধারণ আয়ের এন্ট্রি"
+        sector: "সাধারণ আয়ের এন্ট্রি",
+        project: project // <--- নতুন ফিল্ড
     };
 
     showCustomPopup("⏳", "সাধারণ আয়ের এন্ট্রি ডাটাবেজে সংরক্ষিত হচ্ছে...", false);
@@ -2583,7 +2597,8 @@ function renderDonationTable() {
                     <p style="margin: 2px 0;"><strong>📍 ঠিকানা:</strong> ${entry.address}</p>
                     <p style="margin: 2px 0;"><strong>📞 মোবাইল:</strong> ${entry.phone || '---'}</p>
                     <p style="margin: 2px 0;"><strong>📂 খাত:</strong> ${entry.sector}</p>
-                    <p style="margin: 2px 0;"><strong>💰 পরিমাণ:</strong> ${entry.amount}/-</p>
+                                <p style="margin: 2px 0;"><strong>📁 প্রজেক্টের নাম:</strong> ${entry.project || '---'}</p>
+                                <p style="margin: 2px 0;"><strong>💰 পরিমাণ:</strong> ${entry.amount}/-</p>
                 </div>
             </td>
         </tr>`;
@@ -2627,9 +2642,10 @@ function renderGeneralIncomeTable() {
         <tr id="general-details-row-${mainIndex}" style="display: none; background-color: #f8fafc;">
             <td colspan="3" style="padding: 6px 12px; border: none; text-align: left !important;">
                 <div style="padding: 8px 12px; background-color: #ffffff; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; line-height: 1.4; color: var(--text-main); text-align: left; animation: fadeIn 0.25s ease-out; box-shadow: var(--shadow);">
-                    <p style="margin: 2px 0;"><strong>📅 তারিখ:</strong> ${entry.date}</p>
-                    <p style="margin: 2px 0;"><strong>💰 পরিমাণ:</strong> ${entry.amount}/-</p>
-                    <p style="margin: 2px 0;"><strong>📂 খাত টাইপ:</strong> ${entry.sector}</p>
+                   <p style="margin: 2px 0;"><strong>📅 তারিখ:</strong> ${entry.date}</p>
+                                <p style="margin: 2px 0;"><strong>💰 পরিমাণ:</strong> ${entry.amount}/-</p>
+                                <p style="margin: 2px 0;"><strong>📁 প্রজেক্টের নাম:</strong> ${entry.project || '---'}</p>
+                                <p style="margin: 2px 0;"><strong>📂 খাত টাইপ:</strong> ${entry.sector}</p>
                 </div>
             </td>
         </tr>`;
@@ -2792,22 +2808,32 @@ window.liveSearchGeneralIncome = liveSearchGeneralIncome;
 window.liveSearchDonationIncome = liveSearchDonationIncome;
 window.liveSearchExpenseEntry = liveSearchExpenseEntry;
 
-// হোম পেজের উপাদানগুলোর ডাইনামিক স্ট্যাগার্ড অ্যানিমেশন চালনাকারী ফাংশন
+// হোম পেজের উপাদানগুলোর ডাইনামিক স্ক্রল অ্যানিমেশন চালনাকারী ফাংশন (Intersection Observer)
 function triggerHomeAnimations() {
-    const reveals = document.querySelectorAll('#homeView .reveal-on-scroll');
+    const reveals = document.querySelectorAll('.reveal-on-scroll');
     if (!reveals.length) return;
-    
-    // প্রথমে পূর্বের এক্টিভ ক্লাস মুছে রিসেট করা
-    reveals.forEach(el => el.classList.remove('active'));
-    
-    // একের পর এক ১২০ মিলি-সেকেন্ডের ব্যবধানে একটি একটি করে কার্ড স্ক্রিনে ভেসে উঠবে
-    setTimeout(() => {
-        reveals.forEach((el, index) => {
-            setTimeout(() => {
-                el.classList.add('active');
-            }, index * 120); 
+
+    const observerOptions = {
+        root: null, // ভিউপোর্টের সাপেক্ষে ট্র্যাক করবে
+        rootMargin: '0px 0px -40px 0px', // স্ক্রিনের নিচের অংশ থেকে ৪০ পিক্সেল উপরে থাকতেই অ্যানিমেশন শুরু হবে
+        threshold: 0.1 // ১০% কার্ড দৃশ্যমান হলে অ্যানিমেশন ট্রিগার হবে
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // কার্ডটি স্ক্রিনে আসলে 'active' ক্লাস যুক্ত হবে এবং কার্ডটি ভেসে উঠবে
+                entry.target.classList.add('active');
+            } else {
+                // কার্ডটি স্ক্রিনের বাইরে চলে গেলে 'active' ক্লাস রিমুভ হবে (পুনরায় স্ক্রোল করলে আবার অ্যানিমেশন দেখাবে)
+                entry.target.classList.remove('active');
+            }
         });
-    }, 100);
+    }, observerOptions);
+
+    reveals.forEach(el => {
+        observer.observe(el);
+    });
 }
 
 // ফাংশনটি গ্লোবাল অবজেক্টে এক্সপোর্ট করা হলো
