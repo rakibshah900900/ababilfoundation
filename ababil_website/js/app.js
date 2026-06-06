@@ -1,4 +1,3 @@
-// ==================================================
 // 🗄️ SUPABASE ডাটাবেজ কনফিগারেশন এরিয়া
 // ==================================================
 const SUPABASE_URL = "https://cigpnrygurwsdfavihse.supabase.co";
@@ -326,7 +325,7 @@ window.onload = function() {
         initializeDashboard();
         showSection(initialHash, true); 
         renderHomeCharts(); 
-        triggerHomeAnimations(); // <-- এটি নতুন যোগ করা হয়েছে
+        triggerHomeAnimations(); 
     });
 };
 
@@ -340,7 +339,6 @@ function initializeDashboard() {
     populateReceiptDropdown();
     updateTargetSummary();
     
-    // নিচে নিরাপদ চেক যুক্ত করা হলো
     const titleEl = document.getElementById('currentPageTitle');
     if (titleEl) {
         titleEl.innerText = pageTitles['homeView'];
@@ -447,8 +445,8 @@ function renderHomeCharts() {
             plugins: { legend: { display: false } },
             animation: gradualAnimationConfig, 
             scales: {
-                y: { beginAtZero: true, ticks: { font: { family: 'Hind Siliguri', size: 10 } } },
-                x: { ticks: { font: { family: 'Hind Siliguri', size: 9 } } }
+                y: { beginAtZero: true, ticks: { font: { family: 'Kalpurush', size: 10 } } },
+                x: { ticks: { font: { family: 'Kalpurush', size: 9 } } }
             }
         }
     });
@@ -474,8 +472,8 @@ function renderHomeCharts() {
             plugins: { legend: { display: false } },
             animation: gradualAnimationConfig, 
             scales: {
-                y: { beginAtZero: true, ticks: { font: { family: 'Hind Siliguri', size: 10 } } },
-                x: { ticks: { font: { family: 'Hind Siliguri', size: 9 } } }
+                y: { beginAtZero: true, ticks: { font: { family: 'Kalpurush', size: 10 } } },
+                x: { ticks: { font: { family: 'Kalpurush', size: 9 } } }
             }
         }
     });
@@ -623,8 +621,8 @@ function refreshAllData() {
     renderMemberDetailsTable();
     renderPublicMemberList();
     updateIncomeStatistics('1m');
-    renderDonationTable();       // নতুন আয়ের এন্ট্রি টেবিল রিফ্রেশ করবে
-    renderGeneralIncomeTable();  // সাধারণ আয়ের এন্ট্রি টেবিল রিফ্রেশ করবে
+    renderDonationTable();       
+    renderGeneralIncomeTable();  
     renderExpenseTable();
     populateReceiptDropdown();
     generateReceipt();
@@ -672,11 +670,16 @@ function switchExecutiveTab(tabId) {
     document.getElementById('tabBtnDetails').classList.remove('active');
     document.getElementById('tabBtnIncomeEntry').classList.remove('active');
     document.getElementById('tabBtnExpenseEntry').classList.remove('active');
+    document.getElementById('tabBtnProjectReport').classList.remove('active'); // নতুন বাটন ডিঅ্যাক্টিভেশন
 
     if (tabId === 'targetSubSection') document.getElementById('tabBtnTarget').classList.add('active');
     if (tabId === 'memberDetailsSubSection') document.getElementById('tabBtnDetails').classList.add('active');
     if (tabId === 'incomeEntrySubSection') document.getElementById('tabBtnIncomeEntry').classList.add('active');
     if (tabId === 'expenseEntrySubSection') document.getElementById('tabBtnExpenseEntry').classList.add('active');
+    if (tabId === 'projectReportSubSection') {
+        document.getElementById('tabBtnProjectReport').classList.add('active'); // অ্যাক্টিভেশন
+        populateProjectReportDropdown(); // ডাটাবেজ থেকে প্রজেক্ট নিয়ে ড্রপডাউন পপুলেট করা
+    }
 
     const targetSection = document.getElementById(tabId);
     if (targetSection) {
@@ -717,7 +720,6 @@ async function handleDirectRegistration(event) {
     }
     const blood = document.getElementById('regBloodGroup').value;
 
-    // ৩ সেকেন্ডের পপআপ
     showCustomPopup("⏳", "আপনার তথ্য প্রক্রিয়াকরণ হচ্ছে, অনুগ্রহ করে ৩ সেকেন্ড অপেক্ষা করুন...", false);
 
     setTimeout(async () => {
@@ -807,7 +809,6 @@ async function saveNewMember(event) {
 
         autoIdCounter++; 
         
-        // 🔄 রিয়েল-টাইমে ডাটাবেজ রিলোড করা হচ্ছে
         await loadAllDataFromSupabase();
 
         closeEntryModal();
@@ -838,7 +839,6 @@ function closeDonationModal() {
 function showSection(sectionId, isNavigating = false) {
     window.scrollTo(0, 0);
 
-    // সব সেকশনের আইডি এখানে নিরাপদভাবে চেক করা হচ্ছে
     const sections = ['homeView', 'regFormSection', 'memberListSection', 'incomeSection', 'expenseSection', 'executiveSection', 'bloodBankSection', 'receiptSection'];
     sections.forEach(id => {
         const el = document.getElementById(id);
@@ -847,7 +847,6 @@ function showSection(sectionId, isNavigating = false) {
         }
     });
 
-    // কাঙ্ক্ষিত সেকশনটি নিরাপদভাবে প্রদর্শন করা হচ্ছে
     const targetEl = document.getElementById(sectionId);
     if (targetEl) {
         targetEl.style.display = 'block';
@@ -910,14 +909,14 @@ async function saveDonationEntry(event) {
     const phone = document.getElementById('donPhone').value;
     const amount = parseInt(document.getElementById('donAmount').value) || 0;
     const sector = document.getElementById('donSector').value;
-    const project = document.getElementById('donProject').value; // <--- নতুন লাইন
+    const project = document.getElementById('donProject').value; 
 
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
 
     const entry = {
         receiptNo: receiptNo, date: dateStr, name: name, address: address,
-        phone: phone, amount: amount, sector: sector, project: project // <--- নতুন ফিল্ড
+        phone: phone, amount: amount, sector: sector, project: project 
     };
 
     showCustomPopup("⏳", "আয়ের খাত ডাটাবেজে যাচ্ছে...", false);
@@ -927,14 +926,11 @@ async function saveDonationEntry(event) {
                 .insert([entry]);
             if (error) throw error;
 
-            // ১. নতুন রশিদের স্ট্যাটাস প্রথমে লাল (রশিদ পাঠান/false) করা হলো এবং লোকাল স্টোরেজে সেভ করা হলো
             donationReceiptsStatus[receiptNo] = false; 
             localStorage.setItem('ababil_donation_receipt_status', JSON.stringify(donationReceiptsStatus));
             
-            // ২. রশিদ কাউন্টার বাড়ানো হলো
             globalReceiptCounter++; 
 
-            // ৩. এবার ডাটাবেজ থেকে রিয়েল-টাইমে রিলোড করা হচ্ছে
             await loadAllDataFromSupabase();
 
             closeDonationModal();
@@ -946,8 +942,6 @@ async function saveDonationEntry(event) {
         showCustomPopup("❌", "ত্রুটি: রেকর্ড সেভ করা যায়নি।", true);
     }
 }
-
-
 
 function generateDonationReceiptAction(receiptNo) {
     donationReceiptsStatus[receiptNo] = true; 
@@ -1579,6 +1573,7 @@ function filterBlood(group, element) {
     renderBloodTable(group);
 }
 
+// রক্তদাতা অনুসন্ধানকারী ফাংশন
 function searchBloodDonor() {
     let input = document.getElementById('bloodSearchInput').value.toLowerCase().trim();
     let table = document.getElementById('bloodDonorTable');
@@ -1702,10 +1697,8 @@ async function downloadReceipt() {
         const currentScrollY = window.scrollY;
         window.scrollTo(0, 0);
         
-        // A5 সাইজের কাগজের মাঝখানে রাখার জন্য মার্জিন
-        // উপরে-নিচে: 18mm, বামে-ডানে: 12mm (পুরোপুরি মাঝখানে)
         const opt = {
-            margin: [35, 8, 15, 8],   // [উপর, ডান, নিচে, বাম]
+            margin: [35, 8, 15, 8],   
             filename: pdfFileName,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
@@ -1716,7 +1709,7 @@ async function downloadReceipt() {
             }, 
             jsPDF: { 
                 unit: 'mm', 
-                format: 'a5',           // A5 সাইজ
+                format: 'a5',           
                 orientation: 'portrait' 
             }
         };
@@ -1764,9 +1757,8 @@ async function shareReceipt() {
         ? `${cleanName}_${cleanMemberId}.pdf` 
         : `${cleanName}.pdf`;
 
-    // A5 সাইজের কাগজের মাঝখানে রাখার জন্য মার্জিন
     const opt = {
-        margin: [18, 12, 18, 12],   // [উপর, ডান, নিচে, বাম]
+        margin: [18, 12, 18, 12],   
         filename: pdfFileName,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
@@ -1777,7 +1769,7 @@ async function shareReceipt() {
         }, 
         jsPDF: { 
             unit: 'mm', 
-            format: 'a5',           // A5 সাইজ
+            format: 'a5',           
             orientation: 'portrait' 
         }
     };
@@ -1809,6 +1801,7 @@ async function shareReceipt() {
         showCustomPopup("❌", "শেয়ার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", true);
     }
 }
+
 // ==================================================
 // 🔒 পাসওয়ার্ড প্রোটেকশন ও রিসেট কোড লজিক এরিয়া
 // ==================================================
@@ -2099,7 +2092,7 @@ function editExpenseEntry(index) {
         document.getElementById('editExpSector').value = entry.sector;
         document.getElementById('editExpApprovedBy').value = approvedByVal;
         document.getElementById('editExpAmount').value = entry.amount;
-        document.getElementById('editExpProject').value = entry.project || ""; // প্রজেক্ট এডিটের জন্য সেট করা হলো
+        document.getElementById('editExpProject').value = entry.project || ""; 
         
         let rawDate = entry.date; 
         let formattedDate = "";
@@ -2135,7 +2128,7 @@ async function saveEditedExpenseEntry(event) {
     const sector = document.getElementById('editExpSector').value;
     const approvedBy = document.getElementById('editExpApprovedBy').value;
     const amount = parseInt(document.getElementById('editExpAmount').value) || 0;
-    const project = document.getElementById('editExpProject').value; // নতুন ভ্যালু রিড
+    const project = document.getElementById('editExpProject').value; 
     
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
@@ -2149,7 +2142,7 @@ async function saveEditedExpenseEntry(event) {
                 sector: sector,
                 approvedby: approvedBy, 
                 amount: amount,
-                project: project // ডাটাবেজে প্রজেক্ট কলাম আপডেট
+                project: project 
             })
             .eq('voucherno', voucherNo);
             
@@ -2159,7 +2152,7 @@ async function saveEditedExpenseEntry(event) {
         expenseEntries[selectedExpenseIndex].sector = sector;
         expenseEntries[selectedExpenseIndex].approvedby = approvedBy;
         expenseEntries[selectedExpenseIndex].amount = amount;
-        expenseEntries[selectedExpenseIndex].project = project; // লোকাল অ্যারে আপডেট
+        expenseEntries[selectedExpenseIndex].project = project; 
 
         closeEditExpenseModal();
         closeCustomPopup();
@@ -2201,7 +2194,7 @@ async function saveExpenseEntry(event) {
     const sector = document.getElementById('expSector').value;
     const approvedBy = document.getElementById('expApprovedBy').value;
     const amount = parseInt(document.getElementById('expAmount').value) || 0;
-    const project = document.getElementById('expProject').value; // নতুন ভ্যালু রিড
+    const project = document.getElementById('expProject').value; 
     
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
@@ -2212,7 +2205,7 @@ async function saveExpenseEntry(event) {
         sector: sector,
         approvedby: approvedBy, 
         amount: amount,
-        project: project // প্রজেক্ট ফিল্ড যুক্ত
+        project: project 
     };
 
     showCustomPopup("⏳", "ব্যয় এন্ট্রি ক্লাউডে সংরক্ষিত হচ্ছে...", false);
@@ -2286,7 +2279,7 @@ function editDonationEntry(index) {
     setSafeValue('editDonPhone', entry.phone || '');
     setSafeValue('editDonAmount', entry.amount || '');
     setSafeValue('editDonSector', entry.sector || '');
-    setSafeValue('editDonProject', entry.project || ''); // প্রজেক্ট ফিল্ড এডিটের জন্য সেট করা হলো
+    setSafeValue('editDonProject', entry.project || ''); 
 
     let formattedDate = "";
     if (entry.date) {
@@ -2322,7 +2315,7 @@ async function saveEditedDonationEntry(event) {
     const phone = document.getElementById('editDonPhone').value;
     const amount = parseInt(document.getElementById('editDonAmount').value) || 0;
     const sector = document.getElementById('editDonSector').value;
-    const project = document.getElementById('editDonProject').value; // নতুন ভ্যালু রিড
+    const project = document.getElementById('editDonProject').value; 
 
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
@@ -2338,7 +2331,7 @@ async function saveEditedDonationEntry(event) {
                 phone: phone,
                 amount: amount,
                 sector: sector,
-                project: project // ডাটাবেজে আপডেট
+                project: project 
             })
             .eq('receiptNo', receiptNo);
 
@@ -2350,7 +2343,7 @@ async function saveEditedDonationEntry(event) {
         donationEntries[selectedDonationIndex].phone = phone;
         donationEntries[selectedDonationIndex].amount = amount;
         donationEntries[selectedDonationIndex].sector = sector;
-        donationEntries[selectedDonationIndex].project = project; // লোকাল অ্যারে আপডেট
+        donationEntries[selectedDonationIndex].project = project; 
 
         closeEditDonationModal();
         closeCustomPopup();
@@ -2363,7 +2356,6 @@ async function saveEditedDonationEntry(event) {
     }
 }
 
-// গ্লোবাল ডিলিট ও কনফার্ম ফাংশন লিঙ্ক নিশ্চিত করতে
 window.verifyExecPassword = verifyExecPassword;
 window.sendResetCode = sendResetCode;
 window.verifyResetCode = verifyResetCode;
@@ -2381,7 +2373,6 @@ function generateReceipt() {
     const memberView = document.getElementById('memberReceiptView');
     const donationView = document.getElementById('donationReceiptView');
     
-    // যদি কোনো সদস্য সিলেক্ট করা না থাকে, তবে রশিদ খালি বা ডিফল্ট মোডে দেখাবে
     if (!memberId) {
         if (memberView) memberView.style.display = 'block';
         if (donationView) donationView.style.display = 'none';
@@ -2402,10 +2393,8 @@ function generateReceipt() {
         if (memberView) memberView.style.display = 'block';
         if (donationView) donationView.style.display = 'none';
         
-        // রশিদের আইডি এবং বেসিক তথ্য সেট করুন
         document.getElementById('rNo').innerText = member.latestReceiptNo || 'AF-REC-1000';
         
-        // রশিদের তারিখ হিসেবে আজকের কারেন্ট ডেট সেট করার লজিক
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
         const mm = String(today.getMonth() + 1).padStart(2, '0'); 
@@ -2416,12 +2405,10 @@ function generateReceipt() {
         document.getElementById('rId').innerText = member.id;
         document.getElementById('rName').innerText = member.name;
         
-        // সদস্যের ধরণ অনুযায়ী ধার্য ও জমার পরিমাণ প্রদর্শন
         const targetDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "রক্তদাতা") ? member.type : member.fixedTarget + '/-';
         document.getElementById('rTarget').innerText = targetDisplay;
         document.getElementById('rAmount').innerText = (member.lastPaid || 0) + '/-';
         
-        // পরিশোধিত মাসের তালিকা স্ট্রিংয়ে রূপান্তর করে প্রদর্শন
         let monthsDisplay = '--';
         if (Array.isArray(member.lastPaidMonths) && member.lastPaidMonths.length > 0) {
             monthsDisplay = member.lastPaidMonths.join(', ');
@@ -2439,7 +2426,6 @@ function generateReceipt() {
         }
         document.getElementById('rMonths').innerText = monthsDisplay;
         
-        // বকেয়ার পরিমাণ প্রদর্শন
         const dueDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "রক্তদাতা") ? '০/-' : (member.totalDue || 0) + '/-';
         document.getElementById('rDue').innerText = dueDisplay;
     }
@@ -2477,7 +2463,7 @@ async function saveGeneralIncomeEntry(event) {
     const rawDate = document.getElementById('genDate').value; 
     const sourceDesc = document.getElementById('genSourceDesc').value;
     const amount = parseInt(document.getElementById('genAmount').value) || 0;
-    const project = document.getElementById('genProject').value; // <--- নতুন লাইন
+    const project = document.getElementById('genProject').value; 
     
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
@@ -2490,7 +2476,7 @@ async function saveGeneralIncomeEntry(event) {
         phone: "---", 
         amount: amount, 
         sector: "সাধারণ আয়ের এন্ট্রি",
-        project: project // <--- নতুন ফিল্ড
+        project: project 
     };
 
     showCustomPopup("⏳", "সাধারণ আয়ের এন্ট্রি ডাটাবেজে সংরক্ষিত হচ্ছে...", false);
@@ -2500,14 +2486,11 @@ async function saveGeneralIncomeEntry(event) {
             .insert([entry]);
         if (error) throw error;
 
-        // ১. রশিদের স্ট্যাটাস লাল (false) করে লোকাল স্টোরেজে স্থায়ীভাবে সেভ করা হলো
         donationReceiptsStatus[receiptNo] = false; 
         localStorage.setItem('ababil_donation_receipt_status', JSON.stringify(donationReceiptsStatus));
         
-        // ২. রশিদ কাউন্টার বাড়ানো হলো
         globalReceiptCounter++; 
 
-        // ৩. ডাটাবেজ থেকে ডাটা রিলোড করা হচ্ছে
         await loadAllDataFromSupabase(); 
 
         closeGeneralIncomeModal();
@@ -2520,14 +2503,13 @@ async function saveGeneralIncomeEntry(event) {
     }
 }
 
-// উইন্ডো অবজেক্টে এক্সপোর্ট করা হলো
 window.openGeneralIncomeModal = openGeneralIncomeModal;
 window.closeGeneralIncomeModal = closeGeneralIncomeModal;
 window.closeGeneralIncomeModalOutside = closeGeneralIncomeModalOutside;
 window.saveGeneralIncomeEntry = saveGeneralIncomeEntry;
 
 // ==================================================
-// 🔀 আয় এন্ট্রি সাব-ট্যাব পরিবর্তন ফাংশন (সংশোধিত)
+// 🔀 আয় এন্ট্রি সাব-ট্যাব পরিবর্তন ফাংশন
 // ==================================================
 function switchIncomeSubTab(tab) {
     const generalView = document.getElementById('generalIncomeSubView');
@@ -2548,17 +2530,15 @@ function switchIncomeSubTab(tab) {
     }
 }
 
-// গ্লোবাল স্কোপে এক্সপোর্ট নিশ্চিত করা হলো
 window.switchIncomeSubTab = switchIncomeSubTab;
 
 /// ==================================================
-// 📋 নতুন আয়ের (দাতার অনুদান) টেবিল রেন্ডারিং ফাংশন (সংশোধিত - ড্রপডাউন বিস্তারিত সহ)
+// 📋 নতুন আয়ের (দাতার অনুদান) টেবিল রেন্ডারিং ফাংশন
 // ==================================================
 function renderDonationTable() {
     const tbody = document.getElementById('donationTableBody');
     if(!tbody) return;
     
-    // সাধারণ আয়ের এন্ট্রি বাদ দিয়ে কেবল দাতার আয়ের তালিকা ফিল্টার
     const donationsOnly = donationEntries.filter(e => e.sector !== "সাধারণ আয়ের এন্ট্রি");
     
     if(donationsOnly.length === 0) {
@@ -2567,7 +2547,7 @@ function renderDonationTable() {
     }
     let html = '';
     donationsOnly.forEach((entry) => {
-        let mainIndex = donationEntries.indexOf(entry); // ডিলিট/এডিটের জন্য মূল ইনডেক্স ট্র্যাক
+        let mainIndex = donationEntries.indexOf(entry); 
         let isGenerated = donationReceiptsStatus[entry.receiptNo];
         let receiptCell = isGenerated ? 
             `<span class="receipt-status-sent" onclick="showDirectDonationReceipt('${entry.receiptNo}')">রশিদ পাঠানো হয়েছে</span>` : 
@@ -2607,13 +2587,12 @@ function renderDonationTable() {
 }
 
 // ==================================================
-// 📋 সাধারণ আয়ের টেবিল রেন্ডারিং ফাংশন (সংশোধিত - ড্রপডাউন বিস্তারিত সহ)
+// 📋 সাধারণ আয়ের টেবিল রেন্ডারিং ফাংশন
 // ==================================================
 function renderGeneralIncomeTable() {
     const tbody = document.getElementById('generalIncomeTableBody');
     if(!tbody) return;
     
-    // কেবল সাধারণ আয়ের তালিকা ফিল্টার
     const generalOnly = donationEntries.filter(e => e.sector === "সাধারণ আয়ের এন্ট্রি");
     
     if(generalOnly.length === 0) {
@@ -2622,7 +2601,7 @@ function renderGeneralIncomeTable() {
     }
     let html = '';
     generalOnly.forEach((entry) => {
-        let mainIndex = donationEntries.indexOf(entry); // ডিলিট/এডিটের জন্য মূল ইনডেক্স ট্র্যাক
+        let mainIndex = donationEntries.indexOf(entry); 
         html += `<tr style="border-bottom: 1.5px solid var(--border);">
             <td data-label="রশিদ নং"><span style="color:var(--primary); font-weight:bold;">${entry.receiptNo}</span></td>
             <td data-label="খাত বিবরণী"><strong>${entry.name}</strong></td>
@@ -2690,23 +2669,20 @@ function toggleGeneralDetailsRow(index) {
     }
 }
 
-// ফাংশনগুলোকে গ্লোবাল অবজেক্টের সাথে যুক্ত করা হলো যেন যেকোনো জায়গা থেকে কল করা যায়
 window.toggleDonationDetailsRow = toggleDonationDetailsRow;
 window.toggleGeneralDetailsRow = toggleGeneralDetailsRow;
 window.renderDonationTable = renderDonationTable;
 window.renderGeneralIncomeTable = renderGeneralIncomeTable;
 
 // ==================================================
-// 🔍 ড্যাশবোর্ড সার্চ ফিল্টারিং ফাংশনসমূহ (নতুন যুক্ত করা হয়েছে)
+// 🔍 ড্যাশবোর্ড সার্চ ফিল্টারিং ফাংশনসমূহ
 // ==================================================
 
-// ১. সদস্য প্রোফাইল সার্চ ফিল্টার
 function liveSearchMemberDetails() {
     let input = document.getElementById('memberDetailsSearchInput').value.toLowerCase().trim();
     let tbody = document.getElementById('memberDetailsTableBody');
     let rows = tbody.getElementsByTagName('tr');
     
-    // প্রতি ২টি রো (মূল রো + বিস্তারিত ড্রপডাউন রো) একসাথে প্রসেস করার জন্য i += 2 ব্যবহার করা হয়েছে
     for (let i = 0; i < rows.length; i += 2) {
         let mainRow = rows[i];
         let detailRow = rows[i+1];
@@ -2728,7 +2704,6 @@ function liveSearchMemberDetails() {
     }
 }
 
-// ২. সাধারণ আয়ের এন্ট্রি সার্চ ফিল্টার
 function liveSearchGeneralIncome() {
     let input = document.getElementById('generalIncomeSearchInput').value.toLowerCase().trim();
     let tbody = document.getElementById('generalIncomeTableBody');
@@ -2755,7 +2730,6 @@ function liveSearchGeneralIncome() {
     }
 }
 
-// ৩. দাতার অনুদান সার্চ ফিল্টার
 function liveSearchDonationIncome() {
     let input = document.getElementById('donationIncomeSearchInput').value.toLowerCase().trim();
     let tbody = document.getElementById('donationTableBody');
@@ -2782,7 +2756,6 @@ function liveSearchDonationIncome() {
     }
 }
 
-// ৪. ব্যয় এন্ট্রি সার্চ ফিল্টার
 function liveSearchExpenseEntry() {
     let input = document.getElementById('expenseEntrySearchInput').value.toLowerCase().trim();
     let tbody = document.getElementById('executiveExpenseTableBody');
@@ -2802,30 +2775,26 @@ function liveSearchExpenseEntry() {
     }
 }
 
-// গ্লোবাল স্কোপ নিশ্চিত করার জন্য উন্ডো অবজেক্টে এক্সপোর্ট করা হলো
 window.liveSearchMemberDetails = liveSearchMemberDetails;
 window.liveSearchGeneralIncome = liveSearchGeneralIncome;
 window.liveSearchDonationIncome = liveSearchDonationIncome;
 window.liveSearchExpenseEntry = liveSearchExpenseEntry;
 
-// হোম পেজের উপাদানগুলোর ডাইনামিক স্ক্রল অ্যানিমেশন চালনাকারী ফাংশন (Intersection Observer)
 function triggerHomeAnimations() {
     const reveals = document.querySelectorAll('.reveal-on-scroll');
     if (!reveals.length) return;
 
     const observerOptions = {
-        root: null, // ভিউপোর্টের সাপেক্ষে ট্র্যাক করবে
-        rootMargin: '0px 0px -40px 0px', // স্ক্রিনের নিচের অংশ থেকে ৪০ পিক্সেল উপরে থাকতেই অ্যানিমেশন শুরু হবে
-        threshold: 0.1 // ১০% কার্ড দৃশ্যমান হলে অ্যানিমেশন ট্রিগার হবে
+        root: null, 
+        rootMargin: '0px 0px -40px 0px', 
+        threshold: 0.1 
     };
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // কার্ডটি স্ক্রিনে আসলে 'active' ক্লাস যুক্ত হবে এবং কার্ডটি ভেসে উঠবে
                 entry.target.classList.add('active');
             } else {
-                // কার্ডটি স্ক্রিনের বাইরে চলে গেলে 'active' ক্লাস রিমুভ হবে (পুনরায় স্ক্রোল করলে আবার অ্যানিমেশন দেখাবে)
                 entry.target.classList.remove('active');
             }
         });
@@ -2836,5 +2805,289 @@ function triggerHomeAnimations() {
     });
 }
 
-// ফাংশনটি গ্লোবাল অবজেক্টে এক্সপোর্ট করা হলো
 window.triggerHomeAnimations = triggerHomeAnimations;
+
+// ১. প্রজেক্ট রিপোর্ট উইন্ডোর ড্রপডাউনে ইউনিক প্রজেক্ট লোড করা
+function populateProjectReportDropdown() {
+    const select = document.getElementById('reportProjectSelect');
+    if(!select) return;
+    
+    select.innerHTML = '';
+    
+    // ডাটাবেজের অনুদান খাত থেকে সকল ইউনিক প্রজেক্ট খুঁজে নেওয়া হচ্ছে
+    const projects = [...new Set(donationEntries.map(e => e.project).filter(p => p && p.trim() !== ''))];
+    
+    if (projects.length === 0) {
+        let opt = document.createElement('option');
+        opt.text = "কোনো সচল প্রজেক্ট পাওয়া যায়নি";
+        select.appendChild(opt);
+        return;
+    }
+    
+    let defaultOpt = document.createElement('option');
+    defaultOpt.value = "";
+    defaultOpt.text = "--- একটি প্রজেক্ট নির্বাচন করুন ---";
+    select.appendChild(defaultOpt);
+    
+    projects.forEach(p => {
+        let opt = document.createElement('option');
+        opt.value = p;
+        opt.text = p;
+        select.appendChild(opt);
+    });
+}
+
+// ১. ফন্ট সাইজ স্বয়ংক্রিয়ভাবে ছোট করে বিবরণী ১ পৃষ্ঠায় রাখার ডাইনামিক স্কেলিং ফাংশন
+function adjustExcelReportFontSize() {
+    const reportArea = document.getElementById('excelReportArea');
+    if (!reportArea) return;
+    
+    // প্রথমে বেসলাইন ফন্ট সাইজে রিসেট করে নেওয়া হচ্ছে
+    reportArea.style.fontSize = '';
+    const tables = reportArea.querySelectorAll('.excel-grid-table');
+    tables.forEach(t => {
+        const cells = t.querySelectorAll('th, td');
+        cells.forEach(c => c.style.fontSize = '');
+    });
+    
+    // এ৪ পোর্ট্রেটের স্ট্যান্ডার্ড প্রিন্ট হাইট লিমিট হচ্ছে ১০২০ পিক্সেল
+    const targetMaxHeight = 1020;
+    let currentHeight = reportArea.scrollHeight;
+    
+    // যদি প্রজেক্টের আয়ের রো বেশি হয়ে ১ পৃষ্ঠা ছাড়িয়ে যায়, তবে সাইজ ধীরে ধীরে ছোট করবে
+    if (currentHeight > targetMaxHeight) {
+        let scaleFactor = 11; // ডিফল্ট বেসলাইন সাইজ
+        while (currentHeight > targetMaxHeight && scaleFactor > 7.5) {
+            scaleFactor -= 0.5;
+            reportArea.style.fontSize = scaleFactor + 'px';
+            tables.forEach(t => {
+                const cells = t.querySelectorAll('th, td');
+                cells.forEach(c => c.style.fontSize = scaleFactor + 'px');
+            });
+            currentHeight = reportArea.scrollHeight;
+        }
+    }
+}
+
+// ২. টাইপ করা প্রজেক্টের নামের ভিত্তিতে লাইভ বিবরণী প্রস্তুত করার ফাংশন
+function generateProjectExcelReport() {
+    const input = document.getElementById('reportProjectInput');
+    if (!input) return;
+    
+    const selectedProject = input.value.trim();
+    
+    // প্রতিবেদন তৈরির বর্তমান লাইভ তারিখ (যেমন: 06/06/2026)
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    document.getElementById('excelReportDate').innerText = `${dd}/${mm}/${yyyy}`;
+    
+    if(!selectedProject) {
+        document.getElementById('excelProjectHeaderTitle').innerText = "--- হিসাব বিবরণী";
+        document.getElementById('excelIncomeReportBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px;">অনুগ্রহ করে প্রজেক্টের নাম টাইপ করুন</td></tr>`;
+        document.getElementById('excelExpenseReportBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px;">অনুগ্রহ করে প্রজেক্টের নাম টাইপ করুন</td></tr>`;
+        document.getElementById('excelTotalIncomeAmount').innerText = "০/-";
+        document.getElementById('excelTotalExpenseAmount').innerText = "০/-";
+        document.getElementById('excelCardIncome').innerText = "০/-";
+        document.getElementById('excelCardExpense').innerText = "০/-";
+        document.getElementById('excelCardBalance').innerText = "০/-";
+        return;
+    }
+    
+    // প্রজেক্টের নাম ও হিসাব বিবরণী একীভূত করে ডানে শো করা
+    document.getElementById('excelProjectHeaderTitle').innerText = selectedProject + " হিসাব বিবরণী";
+    
+    // (ক) আয়ের ডেটা ফিল্টার (টাইপ করার সাথে সাথে লাইভ সার্চ হবে, Case-Insensitive)
+    const filteredIncomes = donationEntries.filter(e => e.project && e.project.trim().toLowerCase().includes(selectedProject.toLowerCase()));
+    let incomeHtml = '';
+    let totalIncome = 0;
+    
+    if (filteredIncomes.length === 0) {
+        incomeHtml = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px;">এই প্রজেক্টে কোনো আয়ের রেকর্ড পাওয়া যায়নি</td></tr>`;
+    } else {
+        filteredIncomes.forEach((d, idx) => {
+            totalIncome += (parseInt(d.amount) || 0);
+            incomeHtml += `<tr>
+                <td style="font-weight: 700; text-align: center;">${idx + 1}</td>
+                <td style="font-weight: 800; color: #000000; text-align: center;">${d.name || '---'}</td>
+                <td style="text-align: center;">${d.address || '---'}</td>
+                <td style="font-weight: 800; color: #1e40af; text-align: center;">${(d.amount || 0).toLocaleString('bn-BD')}/-</td>
+            </tr>`;
+        });
+    }
+    document.getElementById('excelIncomeReportBody').innerHTML = incomeHtml;
+    document.getElementById('excelTotalIncomeAmount').innerText = totalIncome.toLocaleString('bn-BD') + '/-';
+    
+    // (খ) ব্যয়ের ডেটা ফিল্টার (টাইপ করার সাথে সাথে লাইভ সার্চ হবে, Case-Insensitive)
+    const filteredExpenses = expenseEntries.filter(e => e.project && e.project.trim().toLowerCase().includes(selectedProject.toLowerCase()));
+    let expenseHtml = '';
+    let totalExpense = 0;
+    
+    if (filteredExpenses.length === 0) {
+        expenseHtml = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px;">এই প্রজেক্টে কোনো ব্যয়ের রেকর্ড পাওয়া যায়নি</td></tr>`;
+    } else {
+        filteredExpenses.forEach((e, idx) => {
+            totalExpense += (parseInt(e.amount) || 0);
+            expenseHtml += `<tr>
+                <td style="text-align: center; font-weight: 700;">${e.date || '---'}</td>
+                <td style="font-weight: 800; color: #000000; text-align: center;">${e.sector || '---'}</td>
+                <td style="text-align: center;">${e.approvedby || '---'}</td>
+                <td style="font-weight: 800; color: #b91c1c; text-align: center;">${(e.amount || 0).toLocaleString('bn-BD')}/-</td>
+            </tr>`;
+        });
+    }
+    document.getElementById('excelExpenseReportBody').innerHTML = expenseHtml;
+    document.getElementById('excelTotalExpenseAmount').innerText = totalExpense.toLocaleString('bn-BD') + '/-';
+    
+    // (গ) ৩টি কার্ডের অটো জেনারেটেড ডাটা ও অবশিষ্ট তহবিল হিসাব
+    const balance = totalIncome - totalExpense;
+    
+    document.getElementById('excelCardIncome').innerText = totalIncome.toLocaleString('bn-BD') + '/-';
+    document.getElementById('excelCardExpense').innerText = totalExpense.toLocaleString('bn-BD') + '/-';
+    document.getElementById('excelCardBalance').innerText = balance.toLocaleString('bn-BD') + '/-';
+
+    // (ঘ) স্বয়ংক্রিয় ১-পাতার স্কেলিং নিশ্চিত করা
+    setTimeout(adjustExcelReportFontSize, 50);
+}
+
+// ৩. পিডিএফ ডাউনলোড ফিক্স (এ ৪ পোর্ট্রেট ফরম্যাটে ওভারফ্লো ফ্রি প্রিন্ট মেথড)
+async function downloadProjectExcelPDF() {
+    const input = document.getElementById('reportProjectInput');
+    if (!input) return;
+    const selectedProject = input.value.trim();
+    
+    if(!selectedProject) {
+        showCustomPopup("⚠️", "অনুগ্রহ করে ডাউনলোডের পূর্বে একটি প্রজেক্ট সিলেক্ট করুন।", true);
+        return;
+    }
+
+    const prepName = document.getElementById('excelPreparerName').value.trim();
+    const prepDesg = document.getElementById('excelPreparerDesignation').value.trim();
+    
+    if (!prepName || !prepDesg) {
+        showCustomPopup("⚠️", "অনুগ্রহ করে প্রস্তুতকারীর নাম এবং পদবী পূরণ করুন।", true);
+        return;
+    }
+
+    const element = document.getElementById('excelReportArea');
+    if (!element) return;
+    
+    const cleanProjectName = selectedProject.replace(/[^a-zA-Z0-9\u0980-\u09FF_]/g, '_').replace(/__+/g, '_');
+    const pdfFileName = `Project_Report_${cleanProjectName}.pdf`;
+
+    showCustomPopup("⏳", "পিডিএফ রিপোর্ট তৈরি হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...", false);
+
+    try {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const currentScrollY = window.scrollY;
+        window.scrollTo(0, 0);
+        
+        const opt = {
+            margin: [10, 10, 10, 10],   
+            filename: pdfFileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 3.0,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            }, 
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4',           
+                orientation: 'portrait' 
+            }
+        };
+        
+        await html2pdf().set(opt).from(element).save();
+        
+        window.scrollTo(0, currentScrollY);
+        closeCustomPopup();
+        showCustomPopup("✅", "পিডিএফ ডাউনলোড সম্পন্ন হয়েছে!", true);
+        
+    } catch (error) {
+        console.error("Project report PDF error:", error);
+        window.scrollTo(0, currentScrollY);
+        closeCustomPopup();
+        showCustomPopup("❌", "ডাউনলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।", true);
+    }
+}
+
+// ৪. এক্সেল সফটওয়্যারে ওপেন করার জন্য .csv ফাইল ডাউনলোড করার মেথড
+function exportProjectToCSV() {
+    const input = document.getElementById('reportProjectInput');
+    if (!input) return;
+    const selectedProject = input.value.trim();
+    
+    if(!selectedProject) {
+        showCustomPopup("⚠️", "অনুগ্রহ করে একটি প্রজেক্ট সিলেক্ট করুন।", true);
+        return;
+    }
+    
+    const filteredIncomes = donationEntries.filter(e => e.project && e.project.trim().toLowerCase().includes(selectedProject.toLowerCase()));
+    if(filteredIncomes.length === 0) {
+        showCustomPopup("⚠️", "এই প্রজেক্টের আন্ডারে কোনো ডাটা নেই।", true);
+        return;
+    }
+
+    let csvContent = "\ufeff"; // বাংলা অক্ষরের সুরক্ষার জন্য UTF-8 BOM
+    csvContent += "আবাবিল ফাউন্ডেশন\n";
+    csvContent += "একটি সামাজিক স্বেচ্ছাসেবী সংগঠন\n";
+    csvContent += "সূচীপাড়া; শাহরাস্তি; চাঁদপুর।\n";
+    csvContent += `প্রজেক্ট: ${selectedProject}\n`;
+    csvContent += `রিপোর্ট তৈরির তারিখ: ${document.getElementById('excelReportDate').innerText}\n\n`;
+    csvContent += "ক্রমিক নং,দাতার নাম,ঠিকানা,দানের পরিমাণ\n";
+    
+    let total = 0;
+    filteredIncomes.forEach((d, idx) => {
+        total += d.amount;
+        const name = d.name ? `"${d.name.replace(/"/g, '""')}"` : '---';
+        const address = d.address ? `"${d.address.replace(/"/g, '""')}"` : '---';
+        csvContent += `${idx + 1},${name},${address},${d.amount}\n`;
+    });
+    
+    csvContent += `,,,सर्वমোট সংগৃহীত: ${total}/-\n`;
+    
+    const preparer = document.getElementById('excelPreparerName').value.trim() || '---';
+    const designation = document.getElementById('excelPreparerDesignation').value.trim() || '---';
+    csvContent += `\nপ্রস্তুতকারী: ${preparer},পদবী: ${designation}\n`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const cleanProjectName = selectedProject.replace(/[^a-zA-Z0-9\u0980-\u09FF_]/g, '_').replace(/__+/g, '_');
+    
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `Ababil_${cleanProjectName}_Excel.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ট্যাব পরিবর্তনের সময় বাটন সংক্রান্ত ইভেন্ট আপডেট
+function switchExecutiveTab(tabId) {
+    document.querySelectorAll('.executive-sub-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    document.getElementById('tabBtnTarget').classList.remove('active');
+    document.getElementById('tabBtnDetails').classList.remove('active');
+    document.getElementById('tabBtnIncomeEntry').classList.remove('active');
+    document.getElementById('tabBtnExpenseEntry').classList.remove('active');
+    document.getElementById('tabBtnProjectReport').classList.remove('active');
+
+    if (tabId === 'targetSubSection') document.getElementById('tabBtnTarget').classList.add('active');
+    if (tabId === 'memberDetailsSubSection') document.getElementById('tabBtnDetails').classList.add('active');
+    if (tabId === 'incomeEntrySubSection') document.getElementById('tabBtnIncomeEntry').classList.add('active');
+    if (tabId === 'expenseEntrySubSection') document.getElementById('tabBtnExpenseEntry').classList.add('active');
+    if (tabId === 'projectReportSubSection') {
+        document.getElementById('tabBtnProjectReport').classList.add('active');
+        // কোনো অতিরিক্ত ড্রপডাউন লোডারের প্রয়োজন নেই
+    }
+
+    const targetSection = document.getElementById(tabId);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+    }
+}
