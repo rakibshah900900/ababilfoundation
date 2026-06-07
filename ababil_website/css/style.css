@@ -267,7 +267,7 @@ header h1 {
 }
 
 .btn-menu-toggle {
-    background-color: var(--primary) !important;
+    background-color: #0a0351 !important;
     color: white !important;
     border: none !important;
 }
@@ -359,10 +359,10 @@ header h1 {
 }
 
 .section-header h2 {
-    margin: 0;
-    font-size: 18px;
+    margin: 5px 9px -2px 9px;
+    font-size: 20px;
     font-weight: 700;
-    color: var(--secondary);
+    color: #f00;
 }
 
 .summary-grid {
@@ -394,7 +394,7 @@ header h1 {
 }
 
 .income-card-bg { background: linear-gradient(135deg, var(--secondary), #334155); }
-.expense-card-bg { background: linear-gradient(135deg, #475569, #1e293b); } 
+.expense-card-bg { background: linear-gradient(135deg, #ff0000, #f30075); } 
 .target-paid-bg { background: linear-gradient(135deg, #059669, #047857); }
 .target-due-bg { background: linear-gradient(135deg, #1e3a8a, #1d4ed8); } 
 .target-total-bg { background: linear-gradient(135deg, #0284c7, #0369a1); }
@@ -639,9 +639,9 @@ header h1 {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    background-color: #f8fafc;
+    background-color: #f00;
     border-bottom: 1px solid var(--border);
-    color: var(--secondary);
+    color: #fff;
 }
 
 .accordion-content { 
@@ -842,7 +842,7 @@ header h1 {
 }
 
 .popup-content { 
-    background-color: var(--secondary); 
+    background-color: #002041; 
     width: 270px; 
     height: 100%; 
     position: fixed; 
@@ -854,11 +854,11 @@ header h1 {
 }
 
 .close-btn { font-size: 26px; cursor: pointer; color: white; float: right; }
-.popup-content h3 { color: white; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-top: 8px; font-size: 16px; }
+.popup-content h3 { color: #a2eeff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-top: 8px; font-size: 20px; }
 .popup-content ul { list-style: none; padding: 0; margin-top: 16px; }
 .popup-content ul li a { 
     color: rgba(255, 255, 255, 0.85); 
-    font-size: 14.5px; 
+    font-size: 17.5px; 
     text-decoration: none; 
     font-weight: 600; 
     display: block; 
@@ -1472,4 +1472,77 @@ footer {
     padding-top: 3px;
     z-index: 2;
     position: relative;
+}
+
+/* ==================================================
+   💎 আধুনিক কার্যক্রম গ্রিড ও আইকন স্টাইল
+   ================================================== */
+.modern-service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.modern-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    text-align: center;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.modern-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 14px 28px rgba(30, 64, 175, 0.1);
+    border-color: var(--primary);
+}
+
+/* আইকনের গোল বৃত্তাকার কন্টেইনার */
+.icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* থিম অনুযায়ী আলাদা কালার */
+.icon-circle.blood {
+    background-color: #fee2e2; /* হালকা লাল */
+    color: #ef4444;           /* গাঢ় লাল */
+}
+
+.icon-circle.help {
+    background-color: #dbeafe; /* হালকা নীল */
+    color: #3b82f6;           /* গাঢ় নীল */
+}
+
+.icon-circle.education {
+    background-color: #dcfce7; /* হালকা সবুজ */
+    color: #10b981;           /* গাঢ় সবুজ */
+}
+.icon-circle.medical {
+    background-color: #ccfbf1; /* হালকা টিল (Teal) ব্যাকগ্রাউন্ড */
+    color: #0d9488;           /* গাঢ় টিল (Teal) আইকন কালার */
+}
+
+.modern-card h4 {
+    margin: 8px 0 6px 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.modern-card p {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
 }
