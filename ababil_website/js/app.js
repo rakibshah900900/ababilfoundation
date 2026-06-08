@@ -1757,42 +1757,40 @@ async function shareReceipt() {
         ? `${cleanName}_${cleanMemberId}.pdf` 
         : `${cleanName}.pdf`;
 
-    // ডাউনলোড ফাংশনের মতো হুবহু একই মার্জিন সেট করা হলো
-    const opt = {
-        margin: [35, 8, 15, 8],   
-        filename: pdfFileName,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 3.0,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff'
-        }, 
-        jsPDF: { 
-            unit: 'mm', 
-            format: 'a5',           
-            orientation: 'portrait' 
-        }
-    };
-
     showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে...", false);
 
-    const currentScrollY = window.scrollY; // বর্তমান স্ক্রল পজিশন সংরক্ষণ
+    const currentScrollY = window.scrollY;
+    window.scrollTo(0, 0); // পিডিএফ রেন্ডারিং কাটিং এড়াতে স্ক্রল টপে নেওয়া হলো
 
     try {
         await new Promise(resolve => setTimeout(resolve, 200));
-        
-        // পিডিএফ কাটিং এড়াতে পেজকে একদম উপরে নিয়ে যাওয়া হলো
-        window.scrollTo(0, 0);
-        
+
+        // ডাউনলোড (downloadReceipt) ফাংশনের হুবহু একই কনফিগারেশন
+        const opt = {
+            margin: [35, 8, 15, 8],   
+            filename: pdfFileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 3.0,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            }, 
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a5',           
+                orientation: 'portrait' 
+            }
+        };
+
+        // .toPdf() মেথড যুক্ত করে save() এর মতো হুবহু একই রেন্ডারিং চেইন তৈরি করা হলো
+        const pdfBlob = await html2pdf().set(opt).from(element).toPdf().output('blob');
+        const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
+
+        window.scrollTo(0, currentScrollY); // কাজ শেষে পূর্বের স্ক্রল পজিশনে ফেরত
+        closeCustomPopup();
+
         if (navigator.share) {
-            const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
-            const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
-            
-            // পিডিএফ জেনারেট শেষে স্ক্রল পূর্বের পজিশনে ফিরিয়ে আনা হলো
-            window.scrollTo(0, currentScrollY);
-            closeCustomPopup();
-            
             await navigator.share({
                 files: [file],
                 title: `${name} এর রশিদ`,
@@ -1800,8 +1798,6 @@ async function shareReceipt() {
             });
             showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
         } else {
-            window.scrollTo(0, currentScrollY);
-            closeCustomPopup();
             showCustomPopup("ℹ️", "আপনার ব্রাউজারে সরাসরি শেয়ার করার সুবিধা নেই। রশিদটি ডাউনলোড করে শেয়ার করতে পারেন।", true);
         }
     } catch (error) {
