@@ -1738,7 +1738,6 @@ async function shareReceipt() {
     const element = document.getElementById('printReceiptArea');
     if (!element) return;
 
-    // নাম ফিক্স করা
     let name = 'রশিদ';
     let memberId = '';
     const isMemberVisible = document.getElementById('memberReceiptView').style.display !== 'none';
@@ -1758,71 +1757,48 @@ async function shareReceipt() {
         ? `${cleanName}_${cleanMemberId}.pdf` 
         : `${cleanName}.pdf`;
 
-    showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...", false);
+    const opt = {
+        margin: [18, 12, 18, 12],   
+        filename: pdfFileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 3.0,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+        }, 
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a5',           
+            orientation: 'portrait' 
+        }
+    };
 
-    // PDF তৈরি করার জন্য অপেক্ষা (UI ফ্রিজ রোধে সামান্য delay)
-    await new Promise(resolve => setTimeout(resolve, 100));
+    showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে...", false);
 
     try {
-        // কঠোরভাবে A5 পোর্ট্রেট ফরম্যাটে এবং মার্জিন কমিয়ে PDF তৈরি করা হচ্ছে
-        // যাতে মোবাইলে শেয়ার করার সময় ছেঁটে না যায়
-        const opt = {
-            margin: [0.3, 0.3, 0.3, 0.3], // মিনিমাল মার্জিন (ইঞ্চিতে)
-            filename: pdfFileName,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2.5,          // স্কেলিং ব্যালেন্স (স্ক্রিনের জন্য যথেষ্ট)
-                useCORS: true,
-                logging: false,
-                backgroundColor: '#ffffff',
-                windowWidth: element.scrollWidth,
-                windowHeight: element.scrollHeight
-            }, 
-            jsPDF: { 
-                unit: 'in',          // ইউনিট ইঞ্চি
-                format: 'a5',        // A5 সাইজ (পোর্ট্রেট)
-                orientation: 'portrait' 
-            }
-        };
-
-        // PDF কে Blob আকারে তৈরি করা হচ্ছে
-        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        await new Promise(resolve => setTimeout(resolve, 200));
         
-        // Blob থেকে ফাইল তৈরি করা
-        const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
-
-        closeCustomPopup();
-
-        // ওয়েব শেয়ার API ব্যবহার করে ফাইল শেয়ার করা
         if (navigator.share) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: `${name} এর রশিদ`,
-                    text: `আবাবিল ফাউন্ডেশন - রশিদ নং: ${receiptNo}`
-                });
-                showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
-            } catch (shareError) {
-                // যদি ইউজার শেয়ারিং বাতিল করে, তাহলে ত্রুটি না দেখিয়ে ডাউনলোডের অপশন দেওয়া
-                if (shareError.name !== 'AbortError') {
-                    showCustomPopup("⚠️", "শেয়ারিং বাতিল করা হয়েছে বা সম্ভব নয়। রশিদটি ডাউনলোড করে শেয়ার করুন।", true);
-                } else {
-                    closeCustomPopup();
-                }
-            }
+            const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+            const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
+            
+            closeCustomPopup();
+            
+            await navigator.share({
+                files: [file],
+                title: `${name} এর রশিদ`,
+                text: `আবাবিল ফাউন্ডেশন - রশিদ নং: ${receiptNo}`
+            });
+            showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
         } else {
-            // শেয়ারিং না থাকলে ডাউনলোডের অপশন
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(pdfBlob);
-            link.download = pdfFileName;
-            link.click();
-            URL.revokeObjectURL(link.href);
-            showCustomPopup("✅", "রশিদটি ডাউনলোড হয়েছে। আপনি এটি শেয়ার করতে পারেন।", true);
+            closeCustomPopup();
+            showCustomPopup("ℹ️", "আপনার ব্রাউজারে সরাসরি শেয়ার করার সুবিধা নেই। রশিদটি ডাউনলোড করে শেয়ার করতে পারেন।", true);
         }
     } catch (error) {
-        console.error("Sharing/PDF generation failed:", error);
+        console.error("Sharing failed:", error);
         closeCustomPopup();
-        showCustomPopup("❌", "পিডিএফ তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", true);
+        showCustomPopup("❌", "শেয়ার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", true);
     }
 }
 
@@ -3115,26 +3091,3 @@ function switchExecutiveTab(tabId) {
         targetSection.style.display = 'block';
     }
 }
-// জন্মতারিখ ইনপুটে টাইপ করার সময় স্বয়ংক্রিয়ভাবে দিন/মাস/বছর (DD/MM/YYYY) ফরম্যাট করার লজিক
-document.addEventListener('DOMContentLoaded', () => {
-    const dobInput = document.getElementById('regDob');
-    if (dobInput) {
-        dobInput.addEventListener('input', function (e) {
-            // শুধু ইংরেজি সংখ্যা রাখবে, বাকি সব ক্যারেক্টার মুছে ফেলবে
-            let value = e.target.value.replace(/\D/g, ''); 
-            if (value.length > 8) value = value.substring(0, 8); 
-            
-            let formatted = '';
-            if (value.length > 0) {
-                formatted = value.substring(0, 2); // দিন (DD)
-                if (value.length > 2) {
-                    formatted += '/' + value.substring(2, 4); // মাস (MM)
-                    if (value.length > 4) {
-                        formatted += '/' + value.substring(4, 8); // বছর (YYYY)
-                    }
-                }
-            }
-            e.target.value = formatted;
-        });
-    }
-});
