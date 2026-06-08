@@ -1757,8 +1757,9 @@ async function shareReceipt() {
         ? `${cleanName}_${cleanMemberId}.pdf` 
         : `${cleanName}.pdf`;
 
+    // ডাউনলোড ফাংশনের মতো হুবহু একই মার্জিন সেট করা হলো
     const opt = {
-        margin: [18, 12, 18, 12],   
+        margin: [35, 8, 15, 8],   
         filename: pdfFileName,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
@@ -1776,13 +1777,20 @@ async function shareReceipt() {
 
     showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে...", false);
 
+    const currentScrollY = window.scrollY; // বর্তমান স্ক্রল পজিশন সংরক্ষণ
+
     try {
         await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // পিডিএফ কাটিং এড়াতে পেজকে একদম উপরে নিয়ে যাওয়া হলো
+        window.scrollTo(0, 0);
         
         if (navigator.share) {
             const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
             const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
             
+            // পিডিএফ জেনারেট শেষে স্ক্রল পূর্বের পজিশনে ফিরিয়ে আনা হলো
+            window.scrollTo(0, currentScrollY);
             closeCustomPopup();
             
             await navigator.share({
@@ -1792,11 +1800,13 @@ async function shareReceipt() {
             });
             showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
         } else {
+            window.scrollTo(0, currentScrollY);
             closeCustomPopup();
             showCustomPopup("ℹ️", "আপনার ব্রাউজারে সরাসরি শেয়ার করার সুবিধা নেই। রশিদটি ডাউনলোড করে শেয়ার করতে পারেন।", true);
         }
     } catch (error) {
         console.error("Sharing failed:", error);
+        window.scrollTo(0, currentScrollY);
         closeCustomPopup();
         showCustomPopup("❌", "শেয়ার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", true);
     }
@@ -3091,3 +3101,26 @@ function switchExecutiveTab(tabId) {
         targetSection.style.display = 'block';
     }
 }
+// জন্মতারিখ ইনপুটে টাইপ করার সময় স্বয়ংক্রিয়ভাবে দিন/মাস/বছর (DD/MM/YYYY) ফরম্যাট করার লজিক
+document.addEventListener('DOMContentLoaded', () => {
+    const dobInput = document.getElementById('regDob');
+    if (dobInput) {
+        dobInput.addEventListener('input', function (e) {
+            // শুধু ইংরেজি সংখ্যা রাখবে, বাকি সব ক্যারেক্টার মুছে ফেলবে
+            let value = e.target.value.replace(/\D/g, ''); 
+            if (value.length > 8) value = value.substring(0, 8); 
+            
+            let formatted = '';
+            if (value.length > 0) {
+                formatted = value.substring(0, 2); // দিন (DD)
+                if (value.length > 2) {
+                    formatted += '/' + value.substring(2, 4); // মাস (MM)
+                    if (value.length > 4) {
+                        formatted += '/' + value.substring(4, 8); // বছর (YYYY)
+                    }
+                }
+            }
+            e.target.value = formatted;
+        });
+    }
+});
