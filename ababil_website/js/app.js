@@ -1786,14 +1786,15 @@ async function shareReceipt() {
         : `${cleanName}.pdf`;
 
     const opt = {
-        margin: [18, 12, 18, 12],   
+        margin: [15, 8, 15, 8],   
         filename: pdfFileName,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
             scale: 3.0,
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            windowWidth: 650 // মোবাইলেও ল্যাপটপের মতো চওড়া লেআউট ধরে রাখার জন্য
         }, 
         jsPDF: { 
             unit: 'mm', 
@@ -1804,13 +1805,17 @@ async function shareReceipt() {
 
     showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে...", false);
 
+    const currentScrollY = window.scrollY;
+    window.scrollTo(0, 0);
+
     try {
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         if (navigator.share) {
             const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
             const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
             
+            window.scrollTo(0, currentScrollY);
             closeCustomPopup();
             
             await navigator.share({
@@ -1820,11 +1825,13 @@ async function shareReceipt() {
             });
             showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
         } else {
+            window.scrollTo(0, currentScrollY);
             closeCustomPopup();
             showCustomPopup("ℹ️", "আপনার ব্রাউজারে সরাসরি শেয়ার করার সুবিধা নেই। রশিদটি ডাউনলোড করে শেয়ার করতে পারেন।", true);
         }
     } catch (error) {
         console.error("Sharing failed:", error);
+        window.scrollTo(0, currentScrollY);
         closeCustomPopup();
         showCustomPopup("❌", "শেয়ার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", true);
     }
