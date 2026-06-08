@@ -1546,22 +1546,3 @@ footer {
     line-height: 1.6;
     margin: 0;
 }
-/* রশিদ কন্টেইনারকে মোবাইলে ফিট রাখার জন্য */
-@media (max-width: 768px) {
-    .receipt-card {
-        max-width: 100% !important;
-        padding: 12px !important;
-        box-sizing: border-box !important;
-        overflow-x: hidden !important;
-    }
-    
-    .receipt-card table {
-        word-break: break-word !important;
-        table-layout: fixed !important;
-    }
-    
-    .receipt-card td, 
-    .receipt-card th {
-        word-break: break-word !important;
-    }
-}
