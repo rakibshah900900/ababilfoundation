@@ -1738,6 +1738,7 @@ async function shareReceipt() {
     const element = document.getElementById('printReceiptArea');
     if (!element) return;
 
+    // নাম ফিক্স করা
     let name = 'রশিদ';
     let memberId = '';
     const isMemberVisible = document.getElementById('memberReceiptView').style.display !== 'none';
@@ -1757,54 +1758,71 @@ async function shareReceipt() {
         ? `${cleanName}_${cleanMemberId}.pdf` 
         : `${cleanName}.pdf`;
 
-    showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে...", false);
+    showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...", false);
 
-    const currentScrollY = window.scrollY;
-    window.scrollTo(0, 0); // পিডিএফ রেন্ডারিং কাটিং এড়াতে স্ক্রল টপে নেওয়া হলো
+    // PDF তৈরি করার জন্য অপেক্ষা (UI ফ্রিজ রোধে সামান্য delay)
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
-        await new Promise(resolve => setTimeout(resolve, 200));
-
-        // ডাউনলোড (downloadReceipt) ফাংশনের হুবহু একই কনফিগারেশন
+        // কঠোরভাবে A5 পোর্ট্রেট ফরম্যাটে এবং মার্জিন কমিয়ে PDF তৈরি করা হচ্ছে
+        // যাতে মোবাইলে শেয়ার করার সময় ছেঁটে না যায়
         const opt = {
-            margin: [35, 8, 15, 8],   
+            margin: [0.3, 0.3, 0.3, 0.3], // মিনিমাল মার্জিন (ইঞ্চিতে)
             filename: pdfFileName,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
-                scale: 3.0,
+                scale: 2.5,          // স্কেলিং ব্যালেন্স (স্ক্রিনের জন্য যথেষ্ট)
                 useCORS: true,
                 logging: false,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                windowWidth: element.scrollWidth,
+                windowHeight: element.scrollHeight
             }, 
             jsPDF: { 
-                unit: 'mm', 
-                format: 'a5',           
+                unit: 'in',          // ইউনিট ইঞ্চি
+                format: 'a5',        // A5 সাইজ (পোর্ট্রেট)
                 orientation: 'portrait' 
             }
         };
 
-        // .toPdf() মেথড যুক্ত করে save() এর মতো হুবহু একই রেন্ডারিং চেইন তৈরি করা হলো
-        const pdfBlob = await html2pdf().set(opt).from(element).toPdf().output('blob');
+        // PDF কে Blob আকারে তৈরি করা হচ্ছে
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        
+        // Blob থেকে ফাইল তৈরি করা
         const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
 
-        window.scrollTo(0, currentScrollY); // কাজ শেষে পূর্বের স্ক্রল পজিশনে ফেরত
         closeCustomPopup();
 
+        // ওয়েব শেয়ার API ব্যবহার করে ফাইল শেয়ার করা
         if (navigator.share) {
-            await navigator.share({
-                files: [file],
-                title: `${name} এর রশিদ`,
-                text: `আবাবিল ফাউন্ডেশন - রশিদ নং: ${receiptNo}`
-            });
-            showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: `${name} এর রশিদ`,
+                    text: `আবাবিল ফাউন্ডেশন - রশিদ নং: ${receiptNo}`
+                });
+                showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
+            } catch (shareError) {
+                // যদি ইউজার শেয়ারিং বাতিল করে, তাহলে ত্রুটি না দেখিয়ে ডাউনলোডের অপশন দেওয়া
+                if (shareError.name !== 'AbortError') {
+                    showCustomPopup("⚠️", "শেয়ারিং বাতিল করা হয়েছে বা সম্ভব নয়। রশিদটি ডাউনলোড করে শেয়ার করুন।", true);
+                } else {
+                    closeCustomPopup();
+                }
+            }
         } else {
-            showCustomPopup("ℹ️", "আপনার ব্রাউজারে সরাসরি শেয়ার করার সুবিধা নেই। রশিদটি ডাউনলোড করে শেয়ার করতে পারেন।", true);
+            // শেয়ারিং না থাকলে ডাউনলোডের অপশন
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = pdfFileName;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showCustomPopup("✅", "রশিদটি ডাউনলোড হয়েছে। আপনি এটি শেয়ার করতে পারেন।", true);
         }
     } catch (error) {
-        console.error("Sharing failed:", error);
-        window.scrollTo(0, currentScrollY);
+        console.error("Sharing/PDF generation failed:", error);
         closeCustomPopup();
-        showCustomPopup("❌", "শেয়ার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", true);
+        showCustomPopup("❌", "পিডিএফ তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", true);
     }
 }
 
