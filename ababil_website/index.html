@@ -242,9 +242,14 @@
                                     <input type="text" id="regMotherName" required placeholder="মাতার নাম লিখুন">
                                 </div>
                                 <div class="form-group">
-                                    <label>জন্মতারিখ:</label>
-                                    <input type="date" id="regDob" required>
+                                <label>জন্মতারিখ:</label>
+                                <!-- justify-content: flex-start এবং max-width ব্যবহার করে বক্সগুলোকে বাম পাশে ছোট আকারে রাখা হয়েছে -->
+                                <div style="display: flex; gap: 6px; justify-content: flex-start; max-width: 220px;">
+                                    <input type="text" id="regDobDay" placeholder="DD" maxlength="2" inputmode="numeric" required style="width: 55px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+                                    <input type="text" id="regDobMonth" placeholder="MM" maxlength="2" inputmode="numeric" required style="width: 55px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+                                    <input type="text" id="regDobYear" placeholder="YYYY" maxlength="4" inputmode="numeric" required style="width: 80px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
                                 </div>
+                            </div>
                                 <div class="form-group">
                                     <label>জাতীয়তা:</label>
                                     <input type="text" id="regNationality" required value="বাংলাদেশী">
