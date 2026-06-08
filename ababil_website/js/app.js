@@ -173,7 +173,8 @@ async function loadAllDataFromSupabase() {
         if (membersData.length > 0) {
             let maxId = 101;
             membersData.forEach(m => {
-                let idNum = parseInt(m.id.replace('AF-', ''));
+                // AF- বা BD- উভয় আইডির ভেতর থেকে কেবল সংখ্যাটুকু নিষ্কাশন করা হচ্ছে
+                let idNum = parseInt(m.id.replace(/[^0-9]/g, ''));
                 if (!isNaN(idNum) && idNum > maxId) maxId = idNum;
             });
             autoIdCounter = maxId + 1;
@@ -201,6 +202,9 @@ async function loadAllDataFromSupabase() {
             globalExpenseCounter = maxVoucherNum + 1;
         }
 
+        // ডাটাবেজ থেকে ডাটা পাওয়ার পর সাজানো নিশ্চিত করা হচ্ছে
+        sortAllDataDescending(); 
+        
         recalculateAllMembersDue();
         refreshAllData();
     } catch (err) {
@@ -615,6 +619,9 @@ async function saveEditedMember(event) {
 }
 
 function refreshAllData() {
+    // তালিকায় নতুন লোকাল এন্ট্রিও যেন সাথে সাথে সবার উপরে চলে যায়
+    sortAllDataDescending(); 
+
     updateTargetSummary();
     renderTargetTable();
     renderBloodTable();
@@ -705,7 +712,13 @@ async function handleDirectRegistration(event) {
     const name = document.getElementById('regName').value;
     const father = document.getElementById('regFatherName').value;
     const mother = document.getElementById('regMotherName').value;
-    const dob = document.getElementById('regDob').value;
+
+    // ৩টি ভিন্ন ইনপুট থেকে দিন, মাস ও বছর সংগ্রহ করা হচ্ছে
+    const dobDay = document.getElementById('regDobDay').value.padStart(2, '0');
+    const dobMonth = document.getElementById('regDobMonth').value.padStart(2, '0');
+    const dobYear = document.getElementById('regDobYear').value;
+    // পূর্বের ডাটাবেজ ফরমেটের (YYYY-MM-DD) সাথে সামঞ্জস্য রেখে এক করা হচ্ছে
+    const dob = `${dobYear}-${dobMonth}-${dobDay}`;
     const nationality = document.getElementById('regNationality').value;
     const religion = document.getElementById('regReligion').value;
     const profession = document.getElementById('regProfession').value;
@@ -1608,11 +1621,23 @@ function closeBloodDonorModalOutside(event) {
 
 async function saveBloodDonor(event) {
     event.preventDefault();
-    const name = document.getElementById('donorName').value;
-    const address = document.getElementById('donorAddress').value;
+    const name = document.getElementById('donorName').value.trim();
+    const address = document.getElementById('donorAddress').value.trim();
     const blood = document.getElementById('donorBloodGroup').value;
-    const phone = document.getElementById('donorPhone').value;
+    const phone = document.getElementById('donorPhone').value.trim();
     const status = document.getElementById('donorStatus').value;
+
+    // ব্লাড ব্যাংকে মোবাইল নম্বর দিয়ে ডুপ্লিকেট এন্ট্রি চেক
+    const isDuplicate = membersData.some(m => {
+        return m.phone && m.phone.trim() === phone && m.blood && m.blood !== "---" && m.blood.trim() !== "";
+    });
+
+    // তথ্য ইতিমধ্যে এন্ট্রি থাকলে ফরম বন্ধ হয়ে ওয়ার্নিং আইকন সহ পপআপ বার্তা আসবে
+    if (isDuplicate) {
+        closeBloodDonorModal(); // ফরমটি বন্ধ এবং রিসেট হয়ে যাবে
+        showCustomPopup("⚠️", "আপনার তথ্যটি ডাটাবেজে সংরক্ষিত রয়েছে।", true); // ⚠️ ওয়ার্নিং আইকন সহ পপআপ শো করবে
+        return; // পরবর্তী প্রসেস এখানেই শেষ হবে
+    }
 
     const id = 'BD-' + autoIdCounter;
 
@@ -1634,11 +1659,14 @@ async function saveBloodDonor(event) {
         closeBloodDonorModal();
         closeCustomPopup();
         refreshAllData();
-    } catch (err) {
-        closeCustomPopup();
-        showCustomPopup("❌", "ত্রুটি: রক্তদাতা সংরক্ষণ করা সম্ভব হয়নি।", true);
-    }
+        } catch (err) {
+                console.error("Error saving blood donor:", err);
+                closeCustomPopup();
+                // ডাটাবেজের সুনির্দিষ্ট ত্রুটির বার্তা পপআপে দেখাবে
+                showCustomPopup("❌", "ত্রুটি: " + (err.message || "রক্তদাতা সংরক্ষণ করা সম্ভব হয়নি।"), true);
+            }
 }
+ // <--- এই বন্ধনীটি আপনার কোডে বাদ পড়েছিল, এটি এখানে যোগ করুন
 
 function populateReceiptDropdown() {
     const select = document.getElementById('receiptMemberSelect');
@@ -2025,6 +2053,9 @@ async function updateNewPassword() {
 // 📉 ব্যয়ের খাত এন্ট্রি মেথড
 // ==================================================
 function renderExpenseTable() {
+    // ব্যয়ের টেবিল রেন্ডার করার পূর্বে সাজানো নিশ্চিত করা
+    sortAllDataDescending(); 
+
     const publicTbody = document.getElementById('expenseTableBody');
     let publicHtml = '';
     let totalExpense = 0;
@@ -3089,5 +3120,65 @@ function switchExecutiveTab(tabId) {
     const targetSection = document.getElementById(tabId);
     if (targetSection) {
         targetSection.style.display = 'block';
+    }
+}
+// জন্মতারিখের ৩টি বক্সে অটো-ফোকাস এবং শুধু সংখ্যা টাইপ নিশ্চিত করার স্ক্রিপ্ট
+document.addEventListener('DOMContentLoaded', () => {
+    const dayInput = document.getElementById('regDobDay');
+    const monthInput = document.getElementById('regDobMonth');
+    const yearInput = document.getElementById('regDobYear');
+
+    if (dayInput && monthInput && yearInput) {
+        // দিন লেখার পর মাসে ফোকাস করা
+        dayInput.addEventListener('input', () => {
+            dayInput.value = dayInput.value.replace(/[^0-9]/g, ''); // শুধু সংখ্যা অনুমোদন
+            if (dayInput.value.length === 2) {
+                monthInput.focus();
+            }
+        });
+
+        // মাস লেখার পর বছরে ফোকাস করা
+        monthInput.addEventListener('input', () => {
+            monthInput.value = monthInput.value.replace(/[^0-9]/g, ''); // শুধু সংখ্যা অনুমোদন
+            if (monthInput.value.length === 2) {
+                yearInput.focus();
+            }
+        });
+
+        // বছরে কেবল সংখ্যা টাইপ নিশ্চিত করা
+        yearInput.addEventListener('input', () => {
+            yearInput.value = yearInput.value.replace(/[^0-9]/g, ''); // শুধু সংখ্যা অনুমোদন
+        });
+    }
+});
+// সকল ডাটা ক্রমানুসারে সাজানোর (সর্বশেষটি প্রথমে) ফাংশন
+function sortAllDataDescending() {
+    // ১. সদস্যদের আইডি ক্রমানুসারে বড় থেকে ছোট সাজানো
+    if (Array.isArray(membersData)) {
+        membersData.sort((a, b) => {
+            let numA = parseInt(a.id.replace(/[^0-9]/g, '')) || 0;
+            let numB = parseInt(b.id.replace(/[^0-9]/g, '')) || 0;
+            return numB - numA; 
+        });
+    }
+
+    // ২. আয়ের রশিদ ক্রমানুসারে বড় থেকে ছোট সাজানো
+    if (Array.isArray(donationEntries)) {
+        donationEntries.sort((a, b) => {
+            let numA = parseInt(a.receiptNo.replace(/[^0-9]/g, '')) || 0;
+            let numB = parseInt(b.receiptNo.replace(/[^0-9]/g, '')) || 0;
+            return numB - numA;
+        });
+    }
+
+    // ৩. ব্যয়ের ভাউচার ক্রমানুসারে বড় থেকে ছোট সাজানো
+    if (Array.isArray(expenseEntries)) {
+        expenseEntries.sort((a, b) => {
+            let voucherA = a.voucherno || a.voucher_no || a.voucherNo || "";
+            let voucherB = b.voucherno || b.voucher_no || b.voucherNo || "";
+            let numA = parseInt(voucherA.replace(/[^0-9]/g, '')) || 0;
+            let numB = parseInt(voucherB.replace(/[^0-9]/g, '')) || 0;
+            return numB - numA;
+        });
     }
 }
