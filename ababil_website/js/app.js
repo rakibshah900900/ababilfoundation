@@ -1719,14 +1719,16 @@ async function downloadReceipt() {
 
     showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...", false);
 
+    // বর্তমান স্ক্রল পজিশন সংরক্ষণ করে স্ক্রিনকে ওপরে স্ক্রল করা হলো
+    const currentScrollY = window.scrollY;
+    window.scrollTo(0, 0);
+
     try {
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        const currentScrollY = window.scrollY;
-        window.scrollTo(0, 0);
+        // ব্রাউজারকে স্ক্রল সেট করার জন্য সামান্য সময় দেওয়া হলো
+        await new Promise(resolve => setTimeout(resolve, 250));
         
         const opt = {
-            margin: [35, 8, 15, 8],   
+            margin: [15, 10, 15, 10], // এ৫ পেজে নিখুঁত সেন্টারিং মার্জিন
             filename: pdfFileName,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
@@ -1745,6 +1747,7 @@ async function downloadReceipt() {
         const worker = html2pdf().set(opt).from(element);
         await worker.save();
         
+        // স্ক্রল আগের পজিশনে ফিরিয়ে আনা হলো
         window.scrollTo(0, currentScrollY);
         closeCustomPopup();
         showCustomPopup("✅", "পিডিএফ ডাউনলোড সম্পন্ন হয়েছে!", true);
@@ -1785,32 +1788,37 @@ async function shareReceipt() {
         ? `${cleanName}_${cleanMemberId}.pdf` 
         : `${cleanName}.pdf`;
 
-    const opt = {
-        margin: [18, 12, 18, 12],   
-        filename: pdfFileName,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 3.0,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff'
-        }, 
-        jsPDF: { 
-            unit: 'mm', 
-            format: 'a5',           
-            orientation: 'portrait' 
-        }
-    };
-
     showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে...", false);
 
+    // বর্তমান স্ক্রল পজিশন সংরক্ষণ করে স্ক্রিনকে ওপরে স্ক্রল করা হলো
+    const currentScrollY = window.scrollY;
+    window.scrollTo(0, 0);
+
     try {
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 250));
+        
+        const opt = {
+            margin: [15, 10, 15, 10], // এ৫ পেজে নিখুঁত সেন্টারিং মার্জিন
+            filename: pdfFileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 3.0,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            }, 
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a5',           
+                orientation: 'portrait' 
+            }
+        };
         
         if (navigator.share) {
             const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
             const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
             
+            window.scrollTo(0, currentScrollY);
             closeCustomPopup();
             
             await navigator.share({
@@ -1820,11 +1828,13 @@ async function shareReceipt() {
             });
             showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
         } else {
+            window.scrollTo(0, currentScrollY);
             closeCustomPopup();
             showCustomPopup("ℹ️", "আপনার ব্রাউজারে সরাসরি শেয়ার করার সুবিধা নেই। রশিদটি ডাউনলোড করে শেয়ার করতে পারেন।", true);
         }
     } catch (error) {
         console.error("Sharing failed:", error);
+        window.scrollTo(0, currentScrollY);
         closeCustomPopup();
         showCustomPopup("❌", "শেয়ার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", true);
     }
