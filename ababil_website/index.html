@@ -327,6 +327,7 @@
                                     <select id="regMemberType" required onchange="handleMemberTypeChange(this.value)">
                                         <option value="" disabled selected hidden>সদস্যের ধরন নির্বাচন করুন</option>
                                         <option value="মাসিক ধার্যকৃত সদস্য">মাসিক ধার্যকৃত সদস্য</option>
+                                        <option value="সাধারণ সদস্য">সাধারণ সদস্য</option> <!-- Added General Member type -->
                                         <option value="স্থায়ী দাতা সদস্য">স্থায়ী দাতা সদস্য</option>
                                     </select>
                                 </div>
@@ -900,21 +901,9 @@
                     </div>
                 </div>
 
-                <div class="card-container">
-                    <div class="table-responsive">
-                        <table class="data-table" id="bloodDonorTable">
-                            <thead>
-                                <tr>
-                                    <th>রক্তদাতার নাম</th>
-                                    <th>ঠিকানা</th>
-                                    <th>রক্তের গ্রুপ</th>
-                                    <th>মোবাইল নম্বর</th>
-                                    <th>অ্যাকশন</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bloodTableBody"></tbody>
-                        </table>
-                    </div>
+                <!-- রক্তদাতাদের আধুনিক কার্ড গ্রিড লেআউট -->
+                <div id="bloodDonorGrid" class="blood-donor-grid">
+                    <!-- জাভাস্ক্রিপ্ট দিয়ে কার্ডগুলো এখানে রেন্ডার হবে -->
                 </div>
             </div>
 
@@ -1114,6 +1103,7 @@
                         <select id="newMemberTypeSelect" required onchange="handleShortFormTypeChange(this.value)">
                             <option value="" disabled selected hidden>নির্বাচন করুন</option>
                             <option value="মাসিক ধার্যকৃত সদস্য">মাসিক ধার্যকৃত সদস্য</option>
+                            <option value="সাধারণ সদস্য">সাধারণ সদস্য</option> <!-- Added General Member type -->
                             <option value="স্থায়ী দাতা সদস্য">স্থায়ী দাতা সদস্য</option>
                         </select>
                     </div>
@@ -1237,11 +1227,12 @@
                         <input type="tel" id="editDonorPhone" required>
                     </div>
                     <div class="form-group">
-                        <label>অবস্থা:</label>
-                        <select id="editDonorStatus" required>
-                            <option value="প্রস্তুত">প্রস্তুত</option>
-                            <option value="অপ্রস্তুত">অপ্রস্তুত</option>
-                        </select>
+                        <label>সর্বশেষ রক্তদানের তারিখ:</label>
+                        <input type="date" id="editDonorLastDonationDate">
+                    </div>
+                    <div class="form-group">
+                        <label>মোট কতবার রক্ত দিয়েছেন?:</label>
+                        <input type="number" id="editDonorDonationCount" min="0">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-danger btn-large" style="margin-top: 14px;">💾 আপডেট সংরক্ষণ করুন</button>
@@ -1479,11 +1470,12 @@
                         <input type="tel" id="donorPhone" required placeholder="01XXXXXXXXX">
                     </div>
                     <div class="form-group">
-                        <label>অবস্থা:</label>
-                        <select id="donorStatus" required>
-                            <option value="প্রস্তুত">প্রস্তুত</option>
-                            <option value="অপ্রস্তুত">অপ্রস্তুত</option>
-                        </select>
+                        <label>সর্বশেষ রক্তদানের তারিখ (ঐচ্ছিক):</label>
+                        <input type="date" id="donorLastDonationDate">
+                    </div>
+                    <div class="form-group">
+                        <label>মোট কতবার রক্ত দিয়েছেন?:</label>
+                        <input type="number" id="donorDonationCount" value="0" min="0">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-large" style="margin-top: 14px;">💾 ডোনার সেভ করুন</button>
@@ -1561,5 +1553,24 @@
 
     <!-- জাভাস্ক্রিপ্ট ফাইল লিংক -->
     <script src="js/app.js"></script>
+<!-- মোডাল: রক্তদানের তারিখ দ্রুত আপডেট -->
+    <div id="quickDonationModal" class="modal" onclick="closeQuickDonationModalOutside(event)">
+        <div class="modal-content" style="max-width: 350px;">
+            <span class="close-modal-btn" onclick="closeQuickDonationModal()">&times;</span>
+            <h3 style="color: var(--danger); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">🩸 রক্তদানের তারিখ আপডেট</h3>
+            <p id="quickDonationDonorName" style="font-weight: bold; margin-bottom: 12px; font-size: 13.5px; color: var(--secondary);"></p>
+            <form id="quickDonationForm" onsubmit="saveQuickDonationDate(event)">
+                <div class="form-group">
+                    <label>রক্তদানের তারিখ:</label>
+                    <input type="date" id="quickDonationDateInput" required style="width: 100%; box-sizing: border-box;">
+                </div>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: bold; margin-top: 12px; color: var(--text-main); cursor: pointer;">
+                    <input type="checkbox" id="quickDonationIncrementCount" checked> রক্তদানের সংখ্যা ১ বার বৃদ্ধি করুন
+                </label>
+                <button type="submit" class="btn btn-danger btn-large" style="margin-top: 16px;">💾 সংরক্ষণ করুন</button>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>
