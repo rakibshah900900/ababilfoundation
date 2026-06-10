@@ -1546,3 +1546,251 @@ footer {
     line-height: 1.6;
     margin: 0;
 }
+/* ==================================================
+   🩸 আবাবিল ব্লাড ব্যাংক: আধুনিক কার্ড গ্রিড স্টাইল
+   ================================================== */
+.blood-donor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.donor-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border, #cbd5e1);
+    border-radius: var(--radius-md, 14px);
+    padding: 16px;
+    box-shadow: var(--shadow, 0 4px 12px rgba(0,0,0,0.03));
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.donor-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg, 0 12px 24px rgba(0,0,0,0.08));
+    border-color: var(--danger, #ef4444);
+}
+
+.donor-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    position: relative;
+    width: 100%;
+}
+
+.donor-blood-badge {
+    width: 44px;
+    height: 44px;
+    background-color: var(--danger, #ef4444);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 900;
+    flex-shrink: 0;
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.25);
+}
+
+.donor-meta {
+    flex: 1;
+    padding-right: 24px; /* অ্যাকশন বাটনের সাথে ওভারল্যাপ এড়াতে */
+}
+
+.donor-name {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 800;
+    color: var(--text-main, #0f172a);
+}
+
+.donor-location {
+    margin: 4px 0 0 0;
+    font-size: 12px;
+    color: var(--text-muted, #64748b);
+    display: flex;
+    align-items: center;
+}
+
+.donor-card-body {
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+/* প্রস্তুত/অপ্রস্তুত স্ট্যাটাস ডিজাইন */
+.donor-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.donor-status-indicator .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.donor-status-indicator.status-ready {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.donor-status-indicator.status-ready .status-dot {
+    background-color: #10b981;
+    animation: statusPulse 1.5s infinite;
+}
+
+.donor-status-indicator.status-not-ready {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.donor-status-indicator.status-not-ready .status-dot {
+    background-color: #ef4444;
+}
+
+@keyframes statusPulse {
+    0% { transform: scale(0.9); opacity: 0.8; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+/* কন্ট্যাক্ট বোতামসমূহ */
+.donor-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    border-top: 1px solid var(--border, #cbd5e1);
+    padding-top: 12px;
+}
+
+.donor-action-btn {
+    text-decoration: none;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 8px;
+    border-radius: var(--radius-sm, 10px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+}
+
+.donor-action-btn.call-btn {
+    background-color: #2563eb; /* রয়্যাল ব্লু */
+    color: white;
+}
+
+.donor-action-btn.call-btn:hover {
+    background-color: #1d4ed8;
+}
+
+.donor-action-btn.whatsapp-btn {
+    background-color: #22c55e; /* হোয়াটসঅ্যাপ সবুজ */
+    color: white;
+}
+
+.donor-action-btn.whatsapp-btn:hover {
+    background-color: #16a34a;
+}
+/* ব্লাড ব্যাংক ডোনার গ্রিড - মোবাইলে পাশাপাশি ২টি কার্ড */
+@media (max-width: 768px) {
+    .blood-donor-grid {
+        grid-template-columns: repeat(2, 1fr) !important; /* পাশাপাশি ২টি কার্ড শো করবে */
+        gap: 8px !important;
+        margin-top: 12px;
+    }
+
+    /* মোবাইলের জন্য কার্ডের ভেতরের ফন্ট ও প্যাডিং ছোট করা হয়েছে */
+    .donor-card {
+        padding: 10px !important;
+        border-radius: var(--radius-sm, 10px) !important;
+    }
+
+    .donor-blood-badge {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 11px !important;
+    }
+
+    .donor-name {
+        font-size: 11px !important;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .donor-location {
+        font-size: 9px !important;
+        margin-top: 2px !important;
+    }
+
+    .donor-status-indicator {
+        font-size: 9px !important;
+        padding: 2px 6px !important;
+    }
+
+    .donor-status-indicator .status-dot {
+        width: 6px !important;
+        height: 6px !important;
+    }
+
+    /* মোবাইলে বাটন দুটি পাশাপাশি রাখার পরিবর্তে নিচে নিচে (stack) করা হয়েছে যেন জায়গা সংকুলান হয় */
+    .donor-card-actions {
+        grid-template-columns: 1fr !important;
+        gap: 4px !important;
+        padding-top: 8px !important;
+    }
+
+    .donor-action-btn {
+        font-size: 9.5px !important;
+        padding: 5px !important;
+        border-radius: 6px !important;
+    }
+}
+/* সরাসরি তারিখ এন্ট্রি সেকশনের ডিজাইন */
+.direct-date-update input[type="date"] {
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 11px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.direct-date-update input[type="date"]:focus {
+    border-color: var(--danger);
+}
+
+@media (max-width: 768px) {
+    .direct-date-update {
+        margin-top: 4px !important;
+        padding-top: 6px !important;
+    }
+    .direct-date-update label {
+        font-size: 8.5px !important;
+    }
+    .direct-date-update input[type="date"] {
+        font-size: 9px !important;
+        height: 22px !important;
+        padding: 2px 4px !important;
+    }
+    .direct-date-update button {
+        height: 22px !important;
+        font-size: 9px !important;
+        padding: 0 6px !important;
+    }
+}
