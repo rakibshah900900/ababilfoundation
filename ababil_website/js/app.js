@@ -841,13 +841,11 @@ function openDonationModal() {
     document.getElementById('donationModal').style.display = 'flex';
     document.getElementById('donReceiptNo').value = 'AF-REC-' + globalReceiptCounter;
     
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    let mm = today.getMonth() + 1; 
-    let dd = today.getDate();
-    if (dd < 10) dd = '0' + dd;
-    if (mm < 10) mm = '0' + mm;
-    document.getElementById('donDate').value = yyyy + '-' + mm + '-' + dd;
+
+    // ডিফল্ট কোনো তারিখ লেখা থাকবে না, ৩টি ইনপুটই খালি রাখা হলো
+document.getElementById('quickDonationDay').value = "";
+document.getElementById('quickDonationMonth').value = "";
+document.getElementById('quickDonationYear').value = "";
 }
 
 function closeDonationModal() {
@@ -1465,7 +1463,7 @@ function renderBloodTable(filterGroup = 'All') {
         }
         count++;
         
-        let donorAddress = m.address || m.permAddress || '---';
+        let donorAddress = m.address || '---';
         
         // --- ৩ মাস (৯০ দিন) স্বয়ংক্রিয় দিন ও মাস গণনার লজিক ---
         let donorStatus = 'প্রস্তুত';
@@ -1594,8 +1592,17 @@ function editBloodDonor(memberId) {
         document.getElementById('editDonorAddress').value = member.address || member.permAddress || '';
         document.getElementById('editDonorBloodGroup').value = member.blood || 'O+';
         document.getElementById('editDonorPhone').value = member.phone;
-        document.getElementById('editDonorLastDonationDate').value = member.last_donation_date || '';
-        document.getElementById('editDonorDonationCount').value = member.donation_count || 0;
+
+// ডাটাবেজের YYYY-MM-DD ফরম্যাট থেকে ভিউয়ার ও এডিটের জন্য DD/MM/YYYY ফরম্যাটে রূপান্তর
+let displayDate = '';
+if (member.last_donation_date) {
+    const parsedDate = parseLocalDate(member.last_donation_date);
+    if (parsedDate) {
+        displayDate = `${String(parsedDate.getDate()).padStart(2, '0')}/${String(parsedDate.getMonth() + 1).padStart(2, '0')}/${parsedDate.getFullYear()}`;
+    }
+}
+document.getElementById('editDonorLastDonationDate').value = displayDate;
+document.getElementById('editDonorDonationCount').value = member.donation_count || 0;
         
         document.getElementById('editBloodDonorModal').style.display = 'flex';
     }
@@ -1618,8 +1625,21 @@ async function saveEditedBloodDonor(event) {
         member.address = document.getElementById('editDonorAddress').value;
         member.blood = document.getElementById('editDonorBloodGroup').value;
         member.phone = document.getElementById('editDonorPhone').value;
-        member.last_donation_date = document.getElementById('editDonorLastDonationDate').value || null;
-        member.donation_count = parseInt(document.getElementById('editDonorDonationCount').value) || 0;
+
+// এডিট করা তারিখটি সঠিকভাবে প্রসেস করা
+const rawEditDate = document.getElementById('editDonorLastDonationDate').value.trim();
+let dbEditDate = null;
+if (rawEditDate) {
+    const parsedDate = parseLocalDate(rawEditDate);
+    if (!parsedDate) {
+        showCustomPopup("⚠️", "রক্তদানের তারিখটি সঠিক ফরম্যাটে লিখুন (দিন/মাস/বছর)। যেমন: 10/06/2026", true);
+        return;
+    }
+    dbEditDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
+}
+
+member.last_donation_date = dbEditDate;
+member.donation_count = parseInt(document.getElementById('editDonorDonationCount').value) || 0;
 
         showCustomPopup("⏳", "রক্তদাতার তথ্য আপডেট হচ্ছে...", false);
         try {
@@ -1734,8 +1754,21 @@ async function saveBloodDonor(event) {
     const address = document.getElementById('donorAddress').value.trim();
     const blood = document.getElementById('donorBloodGroup').value;
     const phone = document.getElementById('donorPhone').value.trim();
-    const lastDonationDate = document.getElementById('donorLastDonationDate').value || null;
-    const donationCount = parseInt(document.getElementById('donorDonationCount').value) || 0;
+
+// টাইপ করা তারিখটিকে ডাটাবেজের জন্য YYYY-MM-DD ফরম্যাটে কনভার্ট করা
+const rawLastDonationDate = document.getElementById('donorLastDonationDate').value.trim();
+let lastDonationDate = null;
+if (rawLastDonationDate) {
+    const parsedDate = parseLocalDate(rawLastDonationDate);
+    if (!parsedDate) {
+        showCustomPopup("⚠️", "সর্বশেষ রক্তদানের তারিখটি সঠিক ফরম্যাটে লিখুন (দিন/মাস/বছর)। যেমন: 10/06/2026", true);
+        return;
+    }
+    lastDonationDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
+}
+
+const donationCount = parseInt(document.getElementById('donorDonationCount').value) || 0;
+
     // ব্লাড ব্যাংকে মোবাইল নম্বর দিয়ে ডুপ্লিকেট এন্ট্রি চেক
     const isDuplicate = membersData.some(m => {
         return m.phone && m.phone.trim() === phone && m.blood && m.blood !== "---" && m.blood.trim() !== "";
@@ -3306,15 +3339,15 @@ function openQuickDonationModal(memberId) {
     if (donor) {
         document.getElementById('quickDonationDonorName').innerText = `রক্তদাতা: ${donor.name} (${donor.blood})`;
         
-        // ডিফল্টভাবে ইনপুটে আজকের তারিখ সেট করা
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        let mm = today.getMonth() + 1;
-        let dd = today.getDate();
-        if (dd < 10) dd = '0' + dd;
-        if (mm < 10) mm = '0' + mm;
-        
-        document.getElementById('quickDonationDateInput').value = `${yyyy}-${mm}-${dd}`;
+        // ডিফল্টভাবে ইনপুটে আজকের তারিখ DD/MM/YYYY ফরম্যাটে সেট করা
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            let mm = today.getMonth() + 1;
+            let dd = today.getDate();
+            if (dd < 10) dd = '0' + dd;
+            if (mm < 10) mm = '0' + mm;
+
+            document.getElementById('quickDonationDateInput').value = `${dd}/${mm}/${yyyy}`;
         document.getElementById('quickDonationIncrementCount').checked = true;
         
         // মোডাল শো করা
@@ -3336,12 +3369,23 @@ function closeQuickDonationModalOutside(event) {
     }
 }
 
-// নতুন রক্তদানের তারিখ সংরক্ষণ করা
 async function saveQuickDonationDate(event) {
     event.preventDefault();
     if (!quickDonationMemberId) return;
 
-    const selectedDate = document.getElementById('quickDonationDateInput').value;
+    // ৩টি ভিন্ন ইনপুট থেকে দিন, মাস ও বছর সংগ্রহ করা হচ্ছে (সদস্য ফরমের জন্মতারিখের মতো হুবহু একই পদ্ধতি)
+    const day = document.getElementById('quickDonationDay').value.padStart(2, '0');
+    const month = document.getElementById('quickDonationMonth').value.padStart(2, '0');
+    const year = document.getElementById('quickDonationYear').value;
+
+    // ভ্যালিডেশন চেক
+    if (day === "00" || month === "00" || year.length < 4 || isNaN(day) || isNaN(month) || isNaN(year)) {
+        showCustomPopup("⚠️", "অনুগ্রহ করে সঠিক দিন, মাস এবং বছর টাইপ করুন।", true);
+        return;
+    }
+
+    // ডাটাবেজ ফরম্যাটের (YYYY-MM-DD) সাথে সামঞ্জস্য রেখে তারিখ তৈরি করা হলো (যেমনটি সদস্য ফরমে করা হয়)
+    const dbFormattedDate = `${year}-${month}-${day}`;
     const isIncrementNeeded = document.getElementById('quickDonationIncrementCount').checked;
 
     const donor = membersData.find(m => m.id === quickDonationMemberId);
@@ -3352,13 +3396,13 @@ async function saveQuickDonationDate(event) {
         newCount += 1;
     }
 
-    showCustomPopup("⏳", "রক্তদানের তথ্য আপডেট করা হচ্ছে...", false);
+    showCustomPopup("⏳", "রক্তদানের তারিখ আপডেট করা হচ্ছে...", false);
 
     try {
         const { error } = await supabaseClient
             .from('members')
             .update({
-                last_donation_date: selectedDate,
+                last_donation_date: dbFormattedDate,
                 donation_count: newCount
             })
             .eq('id', quickDonationMemberId);
@@ -3366,7 +3410,62 @@ async function saveQuickDonationDate(event) {
         if (error) throw error;
 
         // লোকাল মেমোরি ডাটা পরিবর্তন
-        donor.last_donation_date = selectedDate;
+        donor.last_donation_date = dbFormattedDate;
+        donor.donation_count = newCount;
+
+        closeQuickDonationModal();
+        closeCustomPopup();
+        showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
+        
+        refreshAllData(); // ব্লাড ব্যাংক রিফ্রেশ
+    } catch (err) {
+        closeCustomPopup();
+        showCustomPopup("❌", "ত্রুটি: তথ্য সংরক্ষণ সম্ভব হয়নি। " + err.message, true);
+        console.error(err);
+    }
+}
+async function saveQuickDonationDate(event) {
+    event.preventDefault();
+    if (!quickDonationMemberId) return;
+
+    // ৩টি ভিন্ন ইনপুট থেকে দিন, মাস ও বছর সংগ্রহ করা হচ্ছে (সদস্য ফরমের জন্মতারিখের মতো হুবহু একই পদ্ধতি)
+    const day = document.getElementById('quickDonationDay').value.padStart(2, '0');
+    const month = document.getElementById('quickDonationMonth').value.padStart(2, '0');
+    const year = document.getElementById('quickDonationYear').value;
+
+    // ভ্যালিডেশন চেক
+    if (day === "00" || month === "00" || year.length < 4 || isNaN(day) || isNaN(month) || isNaN(year)) {
+        showCustomPopup("⚠️", "অনুগ্রহ করে সঠিক দিন, মাস এবং বছর টাইপ করুন।", true);
+        return;
+    }
+
+    // ডাটাবেজ ফরম্যাটের (YYYY-MM-DD) সাথে সামঞ্জস্য রেখে তারিখ তৈরি করা হলো (যেমনটি সদস্য ফরমে করা হয়)
+    const dbFormattedDate = `${year}-${month}-${day}`;
+    const isIncrementNeeded = document.getElementById('quickDonationIncrementCount').checked;
+
+    const donor = membersData.find(m => m.id === quickDonationMemberId);
+    if (!donor) return;
+
+    let newCount = parseInt(donor.donation_count) || 0;
+    if (isIncrementNeeded) {
+        newCount += 1;
+    }
+
+    showCustomPopup("⏳", "রক্তদানের তারিখ আপডেট করা হচ্ছে...", false);
+
+    try {
+        const { error } = await supabaseClient
+            .from('members')
+            .update({
+                last_donation_date: dbFormattedDate,
+                donation_count: newCount
+            })
+            .eq('id', quickDonationMemberId);
+
+        if (error) throw error;
+
+        // লোকাল মেমোরি ডাটা পরিবর্তন
+        donor.last_donation_date = dbFormattedDate;
         donor.donation_count = newCount;
 
         closeQuickDonationModal();
@@ -3408,4 +3507,250 @@ function parseLocalDate(dateStr) {
     // সাধারণ ফলব্যাক
     let date = new Date(dateStr);
     return isNaN(date.getTime()) ? null : date;
+}
+/// এক ঘর থেকে অন্য ঘরে অটোমেটিক যাওয়ার নিরাপদ ও গ্লোবাল ফাংশন
+function autoTabDate(current, nextId) {
+    // ইনপুট বক্সের সর্বোচ্চ ক্যারেক্টার লিমিট (maxlength) রিড করা
+    var maxLength = parseInt(current.getAttribute("maxlength"));
+    if (current.value.length >= maxLength) {
+        var nextEl = document.getElementById(nextId);
+        if (nextEl) {
+            nextEl.focus(); // পরবর্তী বক্সে ফোকাস নিয়ে যাওয়া
+        }
+    }
+}
+
+// এইচটিএমএল যাতে যেকোনো ব্রাউজারে এটি খুঁজে পায় তার জন্য গ্লোবাল স্কোপে যুক্ত করা হলো
+window.autoTabDate = autoTabDate;
+
+
+function openQuickDonationModal(memberId) {
+    quickDonationMemberId = memberId;
+    const donor = membersData.find(m => m.id === memberId);
+    
+    if (donor) {
+        document.getElementById('quickDonationDonorName').innerText = `রক্তদাতা: ${donor.name} (${donor.blood})`;
+        
+        // ডিফল্ট কোনো তারিখ লেখা থাকবে না, ৩টি ইনপুটই খালি করা হলো
+        document.getElementById('quickDonationDay').value = "";
+        document.getElementById('quickDonationMonth').value = "";
+        document.getElementById('quickDonationYear').value = "";
+        
+        document.getElementById('quickDonationIncrementCount').checked = true;
+        document.getElementById('quickDonationModal').style.display = 'flex';
+    }
+}
+async function saveQuickDonationDate(event) {
+    event.preventDefault();
+    if (!quickDonationMemberId) return;
+
+    const day = document.getElementById('quickDonationDay').value.padStart(2, '0');
+    const month = document.getElementById('quickDonationMonth').value.padStart(2, '0');
+    const year = document.getElementById('quickDonationYear').value;
+
+    // ভ্যালিডেশন চেক
+    if (day === "00" || month === "00" || year.length < 4 || isNaN(day) || isNaN(month) || isNaN(year)) {
+        showCustomPopup("⚠️", "অনুগ্রহ করে সঠিক দিন, মাস এবং বছর টাইপ করুন।", true);
+        return;
+    }
+
+    const dbFormattedDate = `${year}-${month}-${day}`;
+    const isIncrementNeeded = document.getElementById('quickDonationIncrementCount').checked;
+
+    const donor = membersData.find(m => m.id === quickDonationMemberId);
+    if (!donor) return;
+
+    let newCount = parseInt(donor.donation_count) || 0;
+    if (isIncrementNeeded) {
+        newCount += 1;
+    }
+
+    showCustomPopup("⏳", "রক্তদানের তারিখ আপডেট করা হচ্ছে...", false);
+
+    try {
+        const { error } = await supabaseClient
+            .from('members')
+            .update({
+                last_donation_date: dbFormattedDate,
+                donation_count: newCount
+            })
+            .eq('id', quickDonationMemberId);
+
+        if (error) throw error;
+
+        donor.last_donation_date = dbFormattedDate;
+        donor.donation_count = newCount;
+
+        closeQuickDonationModal();
+        closeCustomPopup();
+        showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
+        
+        refreshAllData();
+    } catch (err) {
+        closeCustomPopup();
+        showCustomPopup("❌", "ত্রুটি: তথ্য সংরক্ষণ সম্ভব হয়নি। " + err.message, true);
+        console.error(err);
+    }
+}
+// এক ঘর থেকে অন্য ঘরে অটোমেটিক যাওয়ার নিরাপদ ও গ্লোবাল ফাংশন
+function autoTabDate(current, nextId) {
+    var maxLength = parseInt(current.getAttribute("maxlength"));
+    if (current.value.length >= maxLength) {
+        var nextEl = document.getElementById(nextId);
+        if (nextEl) {
+            nextEl.focus();
+        }
+    }
+}
+window.autoTabDate = autoTabDate;
+
+// রক্তদানের তারিখ দ্রুত আপডেট মোডাল ওপেন
+function openQuickDonationModal(memberId) {
+    quickDonationMemberId = memberId;
+    const donor = membersData.find(m => m.id === memberId);
+    
+    if (donor) {
+        document.getElementById('quickDonationDonorName').innerText = `রক্তদাতা: ${donor.name} (${donor.blood})`;
+        
+        // ডিফল্ট কোনো তারিখ লেখা থাকবে না, ৩টি ইনপুটই খালি করা হলো
+        document.getElementById('quickDonationDay').value = "";
+        document.getElementById('quickDonationMonth').value = "";
+        document.getElementById('quickDonationYear').value = "";
+        
+        document.getElementById('quickDonationIncrementCount').checked = true;
+        document.getElementById('quickDonationModal').style.display = 'flex';
+    }
+}
+
+// রক্তদানের তারিখ দ্রুত আপডেট সংরক্ষণ
+async function saveQuickDonationDate(event) {
+    event.preventDefault();
+    if (!quickDonationMemberId) return;
+
+    const day = document.getElementById('quickDonationDay').value.padStart(2, '0');
+    const month = document.getElementById('quickDonationMonth').value.padStart(2, '0');
+    const year = document.getElementById('quickDonationYear').value;
+
+    // ভ্যালিডেশন চেক
+    if (day === "00" || month === "00" || year.length < 4 || isNaN(day) || isNaN(month) || isNaN(year)) {
+        showCustomPopup("⚠️", "অনুগ্রহ করে সঠিক দিন, মাস এবং বছর টাইপ করুন।", true);
+        return;
+    }
+
+    const dbFormattedDate = `${year}-${month}-${day}`;
+    const isIncrementNeeded = document.getElementById('quickDonationIncrementCount').checked;
+
+    const donor = membersData.find(m => m.id === quickDonationMemberId);
+    if (!donor) return;
+
+    let newCount = parseInt(donor.donation_count) || 0;
+    if (isIncrementNeeded) {
+        newCount += 1;
+    }
+
+    showCustomPopup("⏳", "রক্তদানের তারিখ আপডেট করা হচ্ছে...", false);
+
+    try {
+        const { error } = await supabaseClient
+            .from('members')
+            .update({
+                last_donation_date: dbFormattedDate,
+                donation_count: newCount
+            })
+            .eq('id', quickDonationMemberId);
+
+        if (error) throw error;
+
+        donor.last_donation_date = dbFormattedDate;
+        donor.donation_count = newCount;
+
+        closeQuickDonationModal();
+        closeCustomPopup();
+        showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
+        
+        refreshAllData();
+    } catch (err) {
+        closeCustomPopup();
+        showCustomPopup("❌", "ত্রুটি: তথ্য সংরক্ষণ সম্ভব হয়নি। " + err.message, true);
+        console.error(err);
+    }
+}
+
+// রক্তদাতা তথ্য সংশোধন মোডাল ওপেন করার ফাংশন
+function editBloodDonor(memberId) {
+    const member = membersData.find(m => m.id === memberId);
+    if (member) {
+        document.getElementById('editDonorId').value = member.id;
+        document.getElementById('editDonorName').value = member.name;
+        document.getElementById('editDonorAddress').value = member.address || member.permAddress || '';
+        document.getElementById('editDonorBloodGroup').value = member.blood || 'O+';
+        document.getElementById('editDonorPhone').value = member.phone;
+
+        // ডাটাবেজের YYYY-MM-DD বা DD/MM/YYYY ফরম্যাট থেকে ৩টি বক্সে ভাগ করে এডিট মোডালে প্রদর্শন করা
+        let d = "", m = "", y = "";
+        if (member.last_donation_date) {
+            const parsedDate = parseLocalDate(member.last_donation_date);
+            if (parsedDate) {
+                d = String(parsedDate.getDate()).padStart(2, '0');
+                m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                y = String(parsedDate.getFullYear());
+            }
+        }
+        document.getElementById('editDonorLastDonationDay').value = d;
+        document.getElementById('editDonorLastDonationMonth').value = m;
+        document.getElementById('editDonorLastDonationYear').value = y;
+        
+        document.getElementById('editDonorDonationCount').value = member.donation_count || 0;
+        document.getElementById('editBloodDonorModal').style.display = 'flex';
+    }
+}
+
+// রক্তদাতার সংশোধিত তথ্য সংরক্ষণ
+async function saveEditedBloodDonor(event) {
+    event.preventDefault();
+    const id = document.getElementById('editDonorId').value;
+    const member = membersData.find(m => m.id === id);
+    if (member) {
+        member.name = document.getElementById('editDonorName').value;
+        member.address = document.getElementById('editDonorAddress').value;
+        member.blood = document.getElementById('editDonorBloodGroup').value;
+        member.phone = document.getElementById('editDonorPhone').value;
+
+        // ৩টি ভিন্ন ইনপুট থেকে দিন, মাস ও বছর সংগ্রহ করে ডাটাবেজ বান্ধব YYYY-MM-DD ফরম্যাটে রূপান্তর করা
+        const day = document.getElementById('editDonorLastDonationDay').value.trim().padStart(2, '0');
+        const month = document.getElementById('editDonorLastDonationMonth').value.trim().padStart(2, '0');
+        const year = document.getElementById('editDonorLastDonationYear').value.trim();
+
+        let dbEditDate = null;
+        if (day && month && year && day !== "00" && month !== "00" && year.length === 4) {
+            dbEditDate = `${year}-${month}-${day}`;
+        }
+
+        member.last_donation_date = dbEditDate;
+        member.donation_count = parseInt(document.getElementById('editDonorDonationCount').value) || 0;
+
+        showCustomPopup("⏳", "রক্তদাতার তথ্য আপডেট হচ্ছে...", false);
+        try {
+            const { error } = await supabaseClient
+                .from('members')
+                .update({
+                    name: member.name,
+                    address: member.address,
+                    blood: member.blood,
+                    phone: member.phone,
+                    last_donation_date: member.last_donation_date,
+                    donation_count: member.donation_count
+                })
+                .eq('id', id);
+            if (error) throw error;
+
+            closeEditBloodDonorModal();
+            closeCustomPopup();
+            showCustomPopup("✅", 'রক্তদাতার তথ্য সফলভাবে সংশোধন করা হয়েছে!', true);
+            refreshAllData();
+        } catch (err) {
+            closeCustomPopup();
+            showCustomPopup("❌", "ত্রুটি: তথ্য সংরক্ষণ করা সম্ভব হয়নি।", true);
+        }
+    }
 }
