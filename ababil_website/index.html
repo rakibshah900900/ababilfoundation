@@ -310,7 +310,7 @@
                                     <input type="text" id="regPresentAddress" required placeholder="বর্তমান বসবাসের ঠিকানা">
                                 </div>
                                 <div class="form-group" style="grid-column: span 2;">
-                                    <label>মোবাইল নম্বর:</label>
+                                    <label>মোবাইল নম্বর: (হোয়াটসঅ্যাপ)</label>
                                     <input type="tel" id="regPhone" required placeholder="01XXXXXXXXX">
                                 </div>
                             </div>
@@ -1227,8 +1227,12 @@
                         <input type="tel" id="editDonorPhone" required>
                     </div>
                     <div class="form-group">
-                        <label>সর্বশেষ রক্তদানের তারিখ:</label>
-                        <input type="date" id="editDonorLastDonationDate">
+                        <label>সর্বশেষ রক্তদানের তারিখ (দিন/মাস/বছর):</label>
+                        <div style="display: flex; gap: 6px; justify-content: flex-start; max-width: 220px;">
+                            <input type="text" id="editDonorLastDonationDay" placeholder="DD" maxlength="2" inputmode="numeric" required oninput="autoTabDate(this, 'editDonorLastDonationMonth')" style="width: 55px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+                            <input type="text" id="editDonorLastDonationMonth" placeholder="MM" maxlength="2" inputmode="numeric" required oninput="autoTabDate(this, 'editDonorLastDonationYear')" style="width: 55px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+                            <input type="text" id="editDonorLastDonationYear" placeholder="YYYY" maxlength="4" inputmode="numeric" required style="width: 80px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>মোট কতবার রক্ত দিয়েছেন?:</label>
@@ -1466,12 +1470,12 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>মোবাইল নম্বর:</label>
+                        <label>মোবাইল নম্বর:  (হোয়াটসঅ্যাপ)</label>
                         <input type="tel" id="donorPhone" required placeholder="01XXXXXXXXX">
                     </div>
                     <div class="form-group">
-                        <label>সর্বশেষ রক্তদানের তারিখ (ঐচ্ছিক):</label>
-                        <input type="date" id="donorLastDonationDate">
+                        <label>সর্বশেষ রক্তদানের তারিখ (ঐচ্ছিক - দিন/মাস/বছর):</label>
+                        <input type="text" id="donorLastDonationDate" placeholder="যেমন: 10/06/2026">
                     </div>
                     <div class="form-group">
                         <label>মোট কতবার রক্ত দিয়েছেন?:</label>
@@ -1554,23 +1558,27 @@
     <!-- জাভাস্ক্রিপ্ট ফাইল লিংক -->
     <script src="js/app.js"></script>
 <!-- মোডাল: রক্তদানের তারিখ দ্রুত আপডেট -->
-    <div id="quickDonationModal" class="modal" onclick="closeQuickDonationModalOutside(event)">
-        <div class="modal-content" style="max-width: 350px;">
-            <span class="close-modal-btn" onclick="closeQuickDonationModal()">&times;</span>
-            <h3 style="color: var(--danger); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">🩸 রক্তদানের তারিখ আপডেট</h3>
-            <p id="quickDonationDonorName" style="font-weight: bold; margin-bottom: 12px; font-size: 13.5px; color: var(--secondary);"></p>
-            <form id="quickDonationForm" onsubmit="saveQuickDonationDate(event)">
-                <div class="form-group">
-                    <label>রক্তদানের তারিখ:</label>
-                    <input type="date" id="quickDonationDateInput" required style="width: 100%; box-sizing: border-box;">
+<div id="quickDonationModal" class="modal" onclick="closeQuickDonationModalOutside(event)">
+    <div class="modal-content" style="max-width: 350px;">
+        <span class="close-modal-btn" onclick="closeQuickDonationModal()">&times;</span>
+        <h3 style="color: var(--danger); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">🩸 রক্তদানের তারিখ আপডেট</h3>
+        <p id="quickDonationDonorName" style="font-weight: bold; margin-bottom: 12px; font-size: 13.5px; color: var(--secondary);"></p>
+        <form id="quickDonationForm" onsubmit="saveQuickDonationDate(event)">
+            <div class="form-group">
+                <label>রক্তদানের তারিখ:</label>
+                <div style="display: flex; gap: 6px; justify-content: flex-start; max-width: 220px;">
+                    <input type="text" id="quickDonationDay" placeholder="DD" maxlength="2" inputmode="numeric" required oninput="autoTabDate(this, 'quickDonationMonth')" style="width: 55px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+                    <input type="text" id="quickDonationMonth" placeholder="MM" maxlength="2" inputmode="numeric" required oninput="autoTabDate(this, 'quickDonationYear')" style="width: 55px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+                    <input type="text" id="quickDonationYear" placeholder="YYYY" maxlength="4" inputmode="numeric" required style="width: 80px; text-align: center; padding: 11px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background-color: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
                 </div>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: bold; margin-top: 12px; color: var(--text-main); cursor: pointer;">
-                    <input type="checkbox" id="quickDonationIncrementCount" checked> রক্তদানের সংখ্যা ১ বার বৃদ্ধি করুন
-                </label>
-                <button type="submit" class="btn btn-danger btn-large" style="margin-top: 16px;">💾 সংরক্ষণ করুন</button>
-            </form>
-        </div>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: bold; margin-top: 12px; color: var(--text-main); cursor: pointer;">
+                <input type="checkbox" id="quickDonationIncrementCount" checked> রক্তদানের সংখ্যা ১ বার বৃদ্ধি করুন
+            </label>
+            <button type="submit" class="btn btn-danger btn-large" style="margin-top: 16px;">💾 সংরক্ষণ করুন</button>
+        </form>
     </div>
+</div>
 
 </body>
 </html>
