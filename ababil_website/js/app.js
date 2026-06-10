@@ -1,3 +1,9 @@
+// ইংরেজি সংখ্যাকে বাংলা সংখ্যায় রূপান্তর করার ফাংশন
+function translateToBengaliNumber(num) {
+    const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return num.toString().split('').map(digit => bengaliDigits[digit] || digit).join('');
+}
+
 // 🗄️ SUPABASE ডাটাবেজ কনফিগারেশন এরিয়া
 // ==================================================
 const SUPABASE_URL = "https://cigpnrygurwsdfavihse.supabase.co";
@@ -270,10 +276,10 @@ function handleShortFormTypeChange(typeValue) {
 }
 
 function calculateIndividualDue(member) {
-    if(member.type === "স্থায়ী দাতা সদস্য" || member.type === "রক্তদাতা") {
+    if(member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") {
         member.fixedTarget = 0;
         member.totalDue = 0;
-        member.status = member.type === "রক্তদাতা" ? (member.status || "প্রস্তুত") : "স্থায়ী দাতা";
+        member.status = member.type === "রক্তদাতা" ? (member.status || "প্রস্তুত") : (member.type === "সাধারণ সদস্য" ? "সাধারণ সদস্য" : "স্থায়ী দাতা");
         member.totalPaidAccumulated = member.totalPaidAccumulated || 0; 
         return;
     }
@@ -1260,14 +1266,14 @@ function openMemberModal(id) {
         document.getElementById('profBlood').innerText = member.blood;
         document.getElementById('profAddress').innerText = member.address;
         
-        document.getElementById('profFixedTarget').innerText = (member.type === "স্থায়ী দাতা সদস্য" ? "স্থায়ী দাতা" : member.fixedTarget + '/-');
+        document.getElementById('profFixedTarget').innerText = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" ? member.type : member.fixedTarget + '/-');
         
         tempPaidMonths = [...member.paidMonths];
         initialPaidMonths = [...member.paidMonths];
 
         updateModalTemporaryDues(member);
         
-        if(member.type === "স্থায়ী দাতা সদস্য" || member.type === "রক্তদাতা") {
+        if(member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") {
             document.getElementById('monthListTitle').style.display = 'none';
             document.getElementById('monthsGridContainer').style.display = 'none';
         } else {
@@ -1280,7 +1286,7 @@ function openMemberModal(id) {
 }
 
 function updateModalTemporaryDues(member) {
-    if (member.type === "স্থায়ী দাতা সদস্য" || member.type === "রক্তদাতা") {
+    if (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") {
         document.getElementById('profTotalDue').innerText = '০/-';
         document.getElementById('profTotalPaid').innerText = (member.totalPaidAccumulated || 0) + '/-';
         return;
@@ -1317,7 +1323,7 @@ function renderMonthsGrid(member) {
 
 function toggleMonthPaymentTemp(memberId, monthName) {
     let member = membersData.find(m => m.id === memberId);
-    if (member && member.type !== "স্থায়ী দাতা সদস্য" && member.type !== "রক্তদাতা") {
+    if (member && member.type !== "স্থায়ী দাতা সদস্য" && member.type !== "সাধারণ সদস্য" && member.type !== "রক্তদাতা") {
         const monthIndex = tempPaidMonths.indexOf(monthName);
         if (monthIndex > -1) { 
             tempPaidMonths.splice(monthIndex, 1); 
@@ -1333,7 +1339,7 @@ function toggleMonthPaymentTemp(memberId, monthName) {
 async function saveMemberModalChanges() {
     let member = membersData.find(m => m.id === selectedMemberId);
     if (member) {
-        if (member.type !== "স্থায়ী দাতা সদস্য" && member.type !== "রক্তদাতা") {
+        if (member.type !== "স্থায়ী দাতা সদস্য" && member.type !== "সাধারণ সদস্য" && member.type !== "রক্তদাতা") {
             let newlyPaidMonths = tempPaidMonths.filter(m => !initialPaidMonths.includes(m));
             let paidAmount = newlyPaidMonths.length * member.fixedTarget;
             
@@ -1403,7 +1409,7 @@ function renderMemberDetailsTable() {
         let father = m.fatherName ? m.fatherName : '---';
         let mother = m.motherName ? m.motherName : '---';
         let profession = m.profession ? m.profession : '---';
-        let targetDisplay = (m.type === "স্থায়ী দাতা সদস্য" || m.type === "রক্তদাতা") ? m.type : m.fixedTarget + '/-';
+        let targetDisplay = (m.type === "স্থায়ী দাতা সদস্য" || m.type === "সাধারণ সদস্য" || m.type === "রক্তদাতা") ? m.type : m.fixedTarget + '/-';
         let fullAddress = m.address || '---';
 
         html += `<tr style="border-bottom: 1.5px solid var(--border);">
@@ -1440,11 +1446,15 @@ function renderMemberDetailsTable() {
 function renderBloodTable(filterGroup = 'All') {
     let html = ''; 
     let count = 0;
-    if(membersData.length === 0) {
-        document.getElementById('bloodTableBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); font-style:italic;">ব্লাড ব্যাংকে কোনো রেকর্ড নেই।</td></tr>`;
+    const gridContainer = document.getElementById('bloodDonorGrid');
+    if (!gridContainer) return;
+
+    if (membersData.length === 0) {
+        gridContainer.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-style:italic; grid-column: 1/-1; padding: 20px;">ব্লাড ব্যাংকে কোনো রেকর্ড নেই।</div>`;
         document.getElementById('totalDonorsCount').innerText = '০ জন';
         return;
     }
+
     membersData.forEach(m => {
         if (!m.blood || m.blood.trim() === "" || m.blood === "---") return;
 
@@ -1456,25 +1466,123 @@ function renderBloodTable(filterGroup = 'All') {
         count++;
         
         let donorAddress = m.address || m.permAddress || '---';
-        let truncatedAddress = truncateText(donorAddress, 25, 'ঠিকানা');
+        
+        // --- ৩ মাস (৯০ দিন) স্বয়ংক্রিয় দিন ও মাস গণনার লজিক ---
+        let donorStatus = 'প্রস্তুত';
+        let countdownText = 'রক্তদানে প্রস্তুত';
+        let statusBadgeClass = 'status-ready';
+        let isEligibleToDonate = true; // বাটন দেখানোর ফ্ল্যাগ
 
-        html += `<tr>
-            <td data-label="রক্তদাতার নাম" style="font-weight:600;">${m.name}</td>
-            <td data-label="ঠিকানা">${truncatedAddress}</td>
-            <td data-label="গ্রুপ"><span class="badge badge-blood">${m.blood}</span></td>
-            <td data-label="মোবাইল">${m.phone}</td>
-            <td data-label="অ্যাকশন">
-                <div class="action-dropdown" id="dropdown-blood-${m.id}">
+        if (m.last_donation_date) {
+            // আমাদের তৈরি করা ক্রস-ব্রাউজার নিরাপদ ডেট পার্সার ব্যবহার
+            let lastDate = parseLocalDate(m.last_donation_date);
+            
+            if (lastDate) {
+                let nextDate = new Date(lastDate);
+                nextDate.setMonth(nextDate.getMonth() + 3); // ৩ মাস পরবর্তী তারিখ
+                
+                let today = new Date();
+                today.setHours(0,0,0,0);
+                nextDate.setHours(0,0,0,0);
+                
+                // যদি ৩ মাস পার না হয়ে থাকে (রক্তদানে এখনও বাকি আছে)
+                if (today < nextDate) {
+                    donorStatus = 'অপ্রস্তুত';
+                    isEligibleToDonate = false; // ৩ মাস পার হওয়ার আগে বাটন দেখাবে না
+                    
+                    // মাস এবং দিন আলাদা করার হিসাব
+                    let tempDate = new Date(today);
+                    let diffMonths = 0;
+                    while (tempDate < nextDate) {
+                        tempDate.setMonth(tempDate.getMonth() + 1);
+                        if (tempDate <= nextDate) {
+                            diffMonths++;
+                        } else {
+                            tempDate.setMonth(tempDate.getMonth() - 1);
+                            break;
+                        }
+                    }
+                    let diffDays = Math.floor((nextDate - tempDate) / (1000 * 60 * 60 * 24));
+                    
+                    // বাংলায় সংখ্যা রূপান্তর
+                    let bnMonths = translateToBengaliNumber(diffMonths);
+                    let bnDays = translateToBengaliNumber(diffDays);
+                    
+                    if (diffMonths > 0 && diffDays > 0) {
+                        countdownText = `রক্তদানে বাকি: ${bnMonths} মাস ${bnDays} দিন`;
+                    } else if (diffMonths > 0) {
+                        countdownText = `রক্তদানে বাকি: ${bnMonths} মাস`;
+                    } else {
+                        countdownText = `রক্তদানে বাকি: ${bnDays} দিন`;
+                    }
+                    statusBadgeClass = 'status-not-ready';
+                }
+            }
+        }
+
+        let donationCount = m.donation_count || 0;
+        let cleanPhone = m.phone ? m.phone.replace(/[^0-9]/g, '') : '';
+        
+        let whatsappPhone = cleanPhone.startsWith('0') ? '88' + cleanPhone : cleanPhone;
+        let whatsappLink = `https://wa.me/${whatsappPhone}?text=আসসালামু আলাইকুম, আবাবিল ব্লাড ব্যাংকের মাধ্যমে আপনার রক্তদাতার তথ্য পেয়ে যোগাযোগ করছি। আপনি কি এখন রক্তদানে প্রস্তুত আছেন?`;
+
+        // রক্তদানের ৩ মাস পার হয়ে প্রস্তুত হলে কেবল তখনই বাটনটি রেন্ডার হবে
+        let entryButtonHtml = '';
+        if (isEligibleToDonate) {
+            entryButtonHtml = `
+            <!-- পপআপ ওপেন করার বাটন -->
+            <button onclick="openQuickDonationModal('${m.id}')" style="background-color: #ffe4e6; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px; padding: 5px 8px; font-size: 10.5px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 8px; width: 100%; box-sizing: border-box;">
+                📅 রক্তদানের তারিখ এন্ট্রি
+            </button>
+            `;
+        }
+
+        html += `
+        <div class="donor-card" data-name="${m.name.toLowerCase()}" data-blood="${m.blood.toLowerCase()}" data-address="${donorAddress.toLowerCase()}">
+            <div class="donor-card-header">
+                <div class="donor-blood-badge">${m.blood}</div>
+                <div class="donor-meta">
+                    <h4 class="donor-name">${m.name}</h4>
+                    <p class="donor-location">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle; margin-right: 2px;"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                        ${donorAddress}
+                    </p>
+                </div>
+                <div class="action-dropdown" id="dropdown-blood-${m.id}" style="position: absolute; right: 0; top: 0;">
                     <button class="three-dots-btn" onclick="toggleActionMenu(event, 'blood-${m.id}')">⋮</button>
                     <div class="dropdown-menu-content">
                         <button class="btn-edit" onclick="editBloodDonor('${m.id}')">Edit</button>
                         <button class="btn-delete" onclick="deleteBloodDonor('${m.id}')">Delete</button>
                     </div>
                 </div>
-            </td>
-        </tr>`;
+            </div>
+            
+            <div class="donor-card-body">
+                <div class="donor-status-indicator ${statusBadgeClass}" style="margin-bottom: 6px;">
+                    <span class="status-dot"></span>
+                    ${countdownText}
+                </div>
+                <div style="font-size: 11px; color: var(--text-main); font-weight: bold; margin-left: 4px;">
+                    🩸 মোট রক্তদান: ${donationCount} বার
+                </div>
+                
+                ${entryButtonHtml}
+            </div>
+            
+            <div class="donor-card-actions" style="margin-top: 8px;">
+                <a href="tel:${m.phone}" class="donor-action-btn call-btn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    সরাসরি কল
+                </a>
+                <a href="${whatsappLink}" target="_blank" class="donor-action-btn whatsapp-btn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.705 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    হোয়াটসঅ্যাপ
+                </a>
+            </div>
+        </div>`;
     });
-    document.getElementById('bloodTableBody').innerHTML = html;
+
+    gridContainer.innerHTML = html;
     document.getElementById('totalDonorsCount').innerText = count + ' জন';
 }
 
@@ -1486,7 +1594,8 @@ function editBloodDonor(memberId) {
         document.getElementById('editDonorAddress').value = member.address || member.permAddress || '';
         document.getElementById('editDonorBloodGroup').value = member.blood || 'O+';
         document.getElementById('editDonorPhone').value = member.phone;
-        document.getElementById('editDonorStatus').value = member.status || 'প্রস্তুত';
+        document.getElementById('editDonorLastDonationDate').value = member.last_donation_date || '';
+        document.getElementById('editDonorDonationCount').value = member.donation_count || 0;
         
         document.getElementById('editBloodDonorModal').style.display = 'flex';
     }
@@ -1509,7 +1618,8 @@ async function saveEditedBloodDonor(event) {
         member.address = document.getElementById('editDonorAddress').value;
         member.blood = document.getElementById('editDonorBloodGroup').value;
         member.phone = document.getElementById('editDonorPhone').value;
-        member.status = document.getElementById('editDonorStatus').value;
+        member.last_donation_date = document.getElementById('editDonorLastDonationDate').value || null;
+        member.donation_count = parseInt(document.getElementById('editDonorDonationCount').value) || 0;
 
         showCustomPopup("⏳", "রক্তদাতার তথ্য আপডেট হচ্ছে...", false);
         try {
@@ -1520,7 +1630,8 @@ async function saveEditedBloodDonor(event) {
                     address: member.address,
                     blood: member.blood,
                     phone: member.phone,
-                    status: member.status
+                    last_donation_date: member.last_donation_date,
+                    donation_count: member.donation_count
                 })
                 .eq('id', id);
             if (error) throw error;
@@ -1586,24 +1697,22 @@ function filterBlood(group, element) {
     renderBloodTable(group);
 }
 
-// রক্তদাতা অনুসন্ধানকারী ফাংশন
+//  রক্তদাতা অনুসন্ধানকারী ফাংশন
 function searchBloodDonor() {
     let input = document.getElementById('bloodSearchInput').value.toLowerCase().trim();
-    let table = document.getElementById('bloodDonorTable');
-    let tr = table.getElementsByTagName('tr');
-    for (let i = 1; i < tr.length; i++) {
-        let nameCell = tr[i].getElementsByTagName('td')[0];
-        let bloodGroupCell = tr[i].getElementsByTagName('td')[2];
-        if (nameCell || bloodGroupCell) {
-            let nameText = (nameCell.textContent || nameCell.innerText).toLowerCase();
-            let bloodText = (bloodGroupCell.textContent || bloodGroupCell.innerText).toLowerCase();
-            if (nameText.indexOf(input) > -1 || bloodText.indexOf(input) > -1) { 
-                tr[i].style.display = ""; 
-            } else { 
-                tr[i].style.display = "none"; 
-            }
+    let cards = document.querySelectorAll('#bloodDonorGrid .donor-card');
+    
+    cards.forEach(card => {
+        let name = card.getAttribute('data-name') || '';
+        let blood = card.getAttribute('data-blood') || '';
+        let address = card.getAttribute('data-address') || '';
+        
+        if (name.includes(input) || blood.includes(input) || address.includes(input)) {
+            card.style.display = "flex";
+        } else {
+            card.style.display = "none";
         }
-    }
+    });
 }
 
 function openBloodDonorModal() {
@@ -1625,8 +1734,8 @@ async function saveBloodDonor(event) {
     const address = document.getElementById('donorAddress').value.trim();
     const blood = document.getElementById('donorBloodGroup').value;
     const phone = document.getElementById('donorPhone').value.trim();
-    const status = document.getElementById('donorStatus').value;
-
+    const lastDonationDate = document.getElementById('donorLastDonationDate').value || null;
+    const donationCount = parseInt(document.getElementById('donorDonationCount').value) || 0;
     // ব্লাড ব্যাংকে মোবাইল নম্বর দিয়ে ডুপ্লিকেট এন্ট্রি চেক
     const isDuplicate = membersData.some(m => {
         return m.phone && m.phone.trim() === phone && m.blood && m.blood !== "---" && m.blood.trim() !== "";
@@ -1642,7 +1751,8 @@ async function saveBloodDonor(event) {
     const id = 'BD-' + autoIdCounter;
 
     const newDonor = {
-        id: id, name: name, address: address, blood: blood, phone: phone, status: status,
+        id: id, name: name, address: address, blood: blood, phone: phone, 
+        last_donation_date: lastDonationDate, donation_count: donationCount,
         type: "রক্তদাতা", fixedTarget: 0, lastPaid: 0, lastPaidAmount: 0, lastPaidMonths: [],
         paidMonths: [], totalDue: 0, totalPaidAccumulated: 0, latestReceiptNo: "", receiptSent: false
     };
@@ -1666,10 +1776,10 @@ async function saveBloodDonor(event) {
                 showCustomPopup("❌", "ত্রুটি: " + (err.message || "রক্তদাতা সংরক্ষণ করা সম্ভব হয়নি।"), true);
             }
 }
- // <--- এই বন্ধনীটি আপনার কোডে বাদ পড়েছিল, এটি এখানে যোগ করুন
 
 function populateReceiptDropdown() {
     const select = document.getElementById('receiptMemberSelect');
+    if (!select) return;
     select.innerHTML = '';
     if(membersData.length === 0) {
         let option = document.createElement('option'); 
@@ -2446,7 +2556,7 @@ function generateReceipt() {
         document.getElementById('rId').innerText = member.id;
         document.getElementById('rName').innerText = member.name;
         
-        const targetDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "রক্তদাতা") ? member.type : member.fixedTarget + '/-';
+        const targetDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") ? member.type : member.fixedTarget + '/-';
         document.getElementById('rTarget').innerText = targetDisplay;
         document.getElementById('rAmount').innerText = (member.lastPaid || 0) + '/-';
         
@@ -2467,7 +2577,7 @@ function generateReceipt() {
         }
         document.getElementById('rMonths').innerText = monthsDisplay;
         
-        const dueDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "রক্তদাতা") ? '০/-' : (member.totalDue || 0) + '/-';
+        const dueDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") ? '০/-' : (member.totalDue || 0) + '/-';
         document.getElementById('rDue').innerText = dueDisplay;
     }
 }
@@ -3106,61 +3216,6 @@ function exportProjectToCSV() {
     document.body.removeChild(link);
 }
 
-// ট্যাব পরিবর্তনের সময় বাটন সংক্রান্ত ইভেন্ট আপডেট
-function switchExecutiveTab(tabId) {
-    document.querySelectorAll('.executive-sub-content').forEach(content => {
-        content.style.display = 'none';
-    });
-    
-    document.getElementById('tabBtnTarget').classList.remove('active');
-    document.getElementById('tabBtnDetails').classList.remove('active');
-    document.getElementById('tabBtnIncomeEntry').classList.remove('active');
-    document.getElementById('tabBtnExpenseEntry').classList.remove('active');
-    document.getElementById('tabBtnProjectReport').classList.remove('active');
-
-    if (tabId === 'targetSubSection') document.getElementById('tabBtnTarget').classList.add('active');
-    if (tabId === 'memberDetailsSubSection') document.getElementById('tabBtnDetails').classList.add('active');
-    if (tabId === 'incomeEntrySubSection') document.getElementById('tabBtnIncomeEntry').classList.add('active');
-    if (tabId === 'expenseEntrySubSection') document.getElementById('tabBtnExpenseEntry').classList.add('active');
-    if (tabId === 'projectReportSubSection') {
-        document.getElementById('tabBtnProjectReport').classList.add('active');
-        // কোনো অতিরিক্ত ড্রপডাউন লোডারের প্রয়োজন নেই
-    }
-
-    const targetSection = document.getElementById(tabId);
-    if (targetSection) {
-        targetSection.style.display = 'block';
-    }
-}
-// জন্মতারিখের ৩টি বক্সে অটো-ফোকাস এবং শুধু সংখ্যা টাইপ নিশ্চিত করার স্ক্রিপ্ট
-document.addEventListener('DOMContentLoaded', () => {
-    const dayInput = document.getElementById('regDobDay');
-    const monthInput = document.getElementById('regDobMonth');
-    const yearInput = document.getElementById('regDobYear');
-
-    if (dayInput && monthInput && yearInput) {
-        // দিন লেখার পর মাসে ফোকাস করা
-        dayInput.addEventListener('input', () => {
-            dayInput.value = dayInput.value.replace(/[^0-9]/g, ''); // শুধু সংখ্যা অনুমোদন
-            if (dayInput.value.length === 2) {
-                monthInput.focus();
-            }
-        });
-
-        // মাস লেখার পর বছরে ফোকাস করা
-        monthInput.addEventListener('input', () => {
-            monthInput.value = monthInput.value.replace(/[^0-9]/g, ''); // শুধু সংখ্যা অনুমোদন
-            if (monthInput.value.length === 2) {
-                yearInput.focus();
-            }
-        });
-
-        // বছরে কেবল সংখ্যা টাইপ নিশ্চিত করা
-        yearInput.addEventListener('input', () => {
-            yearInput.value = yearInput.value.replace(/[^0-9]/g, ''); // শুধু সংখ্যা অনুমোদন
-        });
-    }
-});
 // সকল ডাটা ক্রমানুসারে সাজানোর (সর্বশেষটি প্রথমে) ফাংশন
 function sortAllDataDescending() {
     // ১. সদস্যদের আইডি ক্রমানুসারে বড় থেকে ছোট সাজানো
@@ -3191,4 +3246,166 @@ function sortAllDataDescending() {
             return numB - numA;
         });
     }
+}
+
+// সরাসরি কার্ড থেকে রক্তদানের তারিখ আপডেট করার হ্যান্ডলার ফাংশন
+async function updateDonorDonationDateDirect(memberId) {
+    const inputEl = document.getElementById(`direct-date-${memberId}`);
+    if (!inputEl) return;
+    
+    const newDate = inputEl.value;
+    if (!newDate) {
+        showCustomPopup("⚠️", "অনুগ্রহ করে একটি সঠিক তারিখ নির্বাচন করুন।", true);
+        return;
+    }
+    
+    const donor = membersData.find(m => m.id === memberId);
+    if (!donor) return;
+
+    // মোট রক্তদানের সংখ্যা স্বয়ংক্রিয়ভাবে ১ বৃদ্ধি করা হচ্ছে
+    const currentCount = parseInt(donor.donation_count) || 0;
+    const newCount = currentCount + 1;
+
+    showCustomPopup("⏳", "ডাটাবেজে রক্তদানের তথ্য আপডেট করা হচ্ছে...", false);
+
+    try {
+        const { error } = await supabaseClient
+            .from('members')
+            .update({
+                last_donation_date: newDate,
+                donation_count: newCount
+            })
+            .eq('id', memberId);
+
+        if (error) throw error;
+
+        // লোকাল মেমোরি ডাটা আপডেট
+        donor.last_donation_date = newDate;
+        donor.donation_count = newCount;
+
+        closeCustomPopup();
+        showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
+        
+        // সমস্ত পরিবর্তন এবং UI রিফ্রেশ
+        refreshAllData();
+    } catch (err) {
+        closeCustomPopup();
+        showCustomPopup("❌", "ত্রুটি: ডাটা আপডেট করা সম্ভব হয়নি।", true);
+        console.error(err);
+    }
+}
+
+// পপআপ মোডাল পরিচালনার গ্লোবাল ভেরিয়েবল
+let quickDonationMemberId = null;
+
+// মোডাল ওপেন করার ফাংশন
+function openQuickDonationModal(memberId) {
+    quickDonationMemberId = memberId;
+    const donor = membersData.find(m => m.id === memberId);
+    
+    if (donor) {
+        document.getElementById('quickDonationDonorName').innerText = `রক্তদাতা: ${donor.name} (${donor.blood})`;
+        
+        // ডিফল্টভাবে ইনপুটে আজকের তারিখ সেট করা
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        let mm = today.getMonth() + 1;
+        let dd = today.getDate();
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+        
+        document.getElementById('quickDonationDateInput').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('quickDonationIncrementCount').checked = true;
+        
+        // মোডাল শো করা
+        document.getElementById('quickDonationModal').style.display = 'flex';
+    }
+}
+
+// মোডাল বন্ধ করার ফাংশন
+function closeQuickDonationModal() {
+    document.getElementById('quickDonationModal').style.display = 'none';
+    document.getElementById('quickDonationForm').reset();
+    quickDonationMemberId = null;
+}
+
+// মোডালের বাইরে ক্লিক করলে বন্ধ হওয়ার লজিক
+function closeQuickDonationModalOutside(event) {
+    if (event.target.id === 'quickDonationModal') {
+        closeQuickDonationModal();
+    }
+}
+
+// নতুন রক্তদানের তারিখ সংরক্ষণ করা
+async function saveQuickDonationDate(event) {
+    event.preventDefault();
+    if (!quickDonationMemberId) return;
+
+    const selectedDate = document.getElementById('quickDonationDateInput').value;
+    const isIncrementNeeded = document.getElementById('quickDonationIncrementCount').checked;
+
+    const donor = membersData.find(m => m.id === quickDonationMemberId);
+    if (!donor) return;
+
+    let newCount = parseInt(donor.donation_count) || 0;
+    if (isIncrementNeeded) {
+        newCount += 1;
+    }
+
+    showCustomPopup("⏳", "রক্তদানের তথ্য আপডেট করা হচ্ছে...", false);
+
+    try {
+        const { error } = await supabaseClient
+            .from('members')
+            .update({
+                last_donation_date: selectedDate,
+                donation_count: newCount
+            })
+            .eq('id', quickDonationMemberId);
+
+        if (error) throw error;
+
+        // লোকাল মেমোরি ডাটা পরিবর্তন
+        donor.last_donation_date = selectedDate;
+        donor.donation_count = newCount;
+
+        closeQuickDonationModal();
+        closeCustomPopup();
+        showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
+        
+        refreshAllData(); // ব্লাড ব্যাংক রিফ্রেশ
+    } catch (err) {
+        closeCustomPopup();
+        showCustomPopup("❌", "ত্রুটি: তথ্য সংরক্ষণ সম্ভব হয়নি। " + err.message, true);
+        console.error(err);
+    }
+}
+
+// নিরাপদ ও ক্রস-ব্রাউজার ডেট পার্সার (ক্রোম, সাফারি ও মোবাইল ব্রাউজার ফ্রেন্ডলি)
+function parseLocalDate(dateStr) {
+    if (!dateStr) return null;
+    
+    // YYYY-MM-DD ফরম্যাট চেক ও পার্সিং
+    let parts = dateStr.split('-');
+    if (parts.length === 3) {
+        let y = parseInt(parts[0], 10);
+        let m = parseInt(parts[1], 10) - 1; // মাস ০ থেকে শুরু হয়
+        let d = parseInt(parts[2], 10);
+        let date = new Date(y, m, d);
+        if (!isNaN(date.getTime())) return date;
+    }
+    
+    // DD/MM/YYYY ফরম্যাট চেক ও পার্সিং
+    let partsSlash = dateStr.split('/');
+    if (partsSlash.length === 3) {
+        let d = parseInt(partsSlash[0], 10);
+        let m = parseInt(partsSlash[1], 10) - 1;
+        let y = parseInt(partsSlash[2], 10);
+        let date = new Date(y, m, d);
+        if (!isNaN(date.getTime())) return date;
+    }
+    
+    // সাধারণ ফলব্যাক
+    let date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
 }
