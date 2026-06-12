@@ -209,14 +209,41 @@ async function loadAllDataFromSupabase() {
         }
 
         // ডাটাবেজ থেকে ডাটা পাওয়ার পর সাজানো নিশ্চিত করা হচ্ছে
-        sortAllDataDescending(); 
-        
-        recalculateAllMembersDue();
-        refreshAllData();
-    } catch (err) {
-        console.error("ডাটাবেজ কানেকশন ব্যর্থ:", err.message);
+            sortAllDataDescending(); 
+
+            // ---- ডেটাবেজ থেকে লাইভ নোটিশ লোড করার কোড ----
+            let liveTickerMessage = "আবাবিল ফাউন্ডেশন কার্যক্রমে আপনাকে স্বাগতম! আমাদের সাথে যুক্ত হয়ে আর্তমানবতার সেবায় এগিয়ে আসুন।";
+            try {
+                const { data: configData, error: configError } = await supabaseClient
+                    .from('admin_settings')
+                    .select('ticker_text')
+                    .eq('id', 'config')
+                    .single();
+                if (!configError && configData && configData.ticker_text) {
+                    liveTickerMessage = configData.ticker_text;
+                }
+            } catch (err) {
+                console.warn("লাইভ নোটিশ লোড করা যায়নি:", err.message);
+            }
+            
+            // হোম পেজে নোটিশ সেট করা
+            const tickerEl = document.getElementById('liveTickerText');
+            if (tickerEl) {
+                tickerEl.innerText = liveTickerMessage;
+            }
+            // প্যানেলের ইনপুট বক্সে নোটিশ সেট করা
+            const tickerInputEl = document.getElementById('tickerTextInput');
+            if (tickerInputEl) {
+                tickerInputEl.value = liveTickerMessage;
+            }
+            // ----------------------------------------------
+            
+            recalculateAllMembersDue();
+            refreshAllData();
+        } catch (err) {
+            console.error("ডাটাবেজ কানেকশন ব্যর্থ:", err.message);
+        }
     }
-}
 
 function showCustomPopup(icon, titleText, showBtn = true) {
     document.getElementById('statusModalIcon').innerText = icon;
@@ -625,7 +652,6 @@ async function saveEditedMember(event) {
 }
 
 function refreshAllData() {
-    // তালিকায় নতুন লোকাল এন্ট্রিও যেন সাথে সাথে সবার উপরে চলে যায়
     sortAllDataDescending(); 
 
     updateTargetSummary();
@@ -640,6 +666,18 @@ function refreshAllData() {
     populateReceiptDropdown();
     generateReceipt();
     renderHomeCharts(); 
+
+    // ---- লাইভ তথ্য বারের লেখা ডাইনামিক করার অংশ ----
+    const totalDonors = membersData.filter(m => m.blood && m.blood !== '---' && m.blood.trim() !== "").length;
+    const totalMembers = membersData.filter(m => m.type !== "রক্তদাতা").length;
+
+    const dynamicTickerMessage = `আবাবিল ফাউন্ডেশন ডিজিটাল ডাটাবেজে আপনাকে স্বাগতম! বর্তমানে আমাদের মোট সাধারণ সদস্য: ${translateToBengaliNumber(totalMembers)} জন এবং নিবন্ধিত রক্তদাতা: ${translateToBengaliNumber(totalDonors)} জন। জরুরি রক্তের প্রয়োজনে আমাদের ব্লাড ব্যাংক অপশনটি ব্যবহার করুন। ধন্যবাদ।`;
+    
+    const tickerEl = document.getElementById('liveTickerText');
+    if (tickerEl) {
+        tickerEl.innerText = dynamicTickerMessage;
+    }
+    // ---------------------------------------------
 }
 
 function toggleTargetDetailsRow(id) {
@@ -683,16 +721,18 @@ function switchExecutiveTab(tabId) {
     document.getElementById('tabBtnDetails').classList.remove('active');
     document.getElementById('tabBtnIncomeEntry').classList.remove('active');
     document.getElementById('tabBtnExpenseEntry').classList.remove('active');
-    document.getElementById('tabBtnProjectReport').classList.remove('active'); // নতুন বাটন ডিঅ্যাক্টিভেশন
+    document.getElementById('tabBtnProjectReport').classList.remove('active');
+    document.getElementById('tabBtnLiveTicker').classList.remove('active'); // নতুন বাটন রিসেট
 
     if (tabId === 'targetSubSection') document.getElementById('tabBtnTarget').classList.add('active');
     if (tabId === 'memberDetailsSubSection') document.getElementById('tabBtnDetails').classList.add('active');
     if (tabId === 'incomeEntrySubSection') document.getElementById('tabBtnIncomeEntry').classList.add('active');
     if (tabId === 'expenseEntrySubSection') document.getElementById('tabBtnExpenseEntry').classList.add('active');
     if (tabId === 'projectReportSubSection') {
-        document.getElementById('tabBtnProjectReport').classList.add('active'); // অ্যাক্টিভেশন
-        populateProjectReportDropdown(); // ডাটাবেজ থেকে প্রজেক্ট নিয়ে ড্রপডাউন পপুলেট করা
+        document.getElementById('tabBtnProjectReport').classList.add('active');
+        populateProjectReportDropdown();
     }
+    if (tabId === 'liveTickerSubSection') document.getElementById('tabBtnLiveTicker').classList.add('active'); // নতুন বাটন অ্যাক্টিভেশন
 
     const targetSection = document.getElementById(tabId);
     if (targetSection) {
@@ -3754,3 +3794,37 @@ async function saveEditedBloodDonor(event) {
         }
     }
 }
+// লাইভ নোটিশ ডাটাবেজে সংরক্ষণ করা
+async function saveLiveTickerText(event) {
+    event.preventDefault();
+    const text = document.getElementById('tickerTextInput').value.trim();
+    if(!text) {
+        showCustomPopup("⚠️", "দয়া করে ফাঁকা নোটিশ সেভ করবেন না।", true);
+        return;
+    }
+    
+    showCustomPopup("⏳", "লাইভ নোটিশ ডাটাবেজে আপডেট হচ্ছে...", false);
+    try {
+        const { error } = await supabaseClient
+            .from('admin_settings')
+            .update({ ticker_text: text })
+            .eq('id', 'config');
+            
+        if (error) throw error;
+        
+        // হোম পেজে লাইভ নোটিশ পরিবর্তন করা
+        const tickerEl = document.getElementById('liveTickerText');
+        if (tickerEl) {
+            tickerEl.innerText = text;
+        }
+        
+        closeCustomPopup();
+        showCustomPopup("✅", "হোম পেজের লাইভ নোটিশ সফলভাবে আপডেট হয়েছে!", true);
+    } catch (err) {
+        closeCustomPopup();
+        showCustomPopup("❌", "ত্রুটি: নোটিশ ডাটাবেজে সেভ করা যায়নি। " + err.message, true);
+    }
+}
+
+// গ্লোবাল স্কোপে এক্সপোর্ট করা
+window.saveLiveTickerText = saveLiveTickerText;
