@@ -7,7 +7,7 @@ function translateToBengaliNumber(num) {
 // 🗄️ SUPABASE ডাটাবেজ কনফিগারেশন এরিয়া
 // ==================================================
 const SUPABASE_URL = "https://cigpnrygurwsdfavihse.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Yl2IaoY4vQhLcEjdkhFYRA_dKzA-gIT"; 
+const SUPABASE_KEY = "sb_publishable_Yl2IaoY4vQhLcEjdkhFYRA_dKzA-gIT";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // বাংলা বানানকে হোয়াটসঅ্যাপের উপযোগী ইংরেজি বানানে রূপান্তর করার ফাংশন
@@ -30,9 +30,9 @@ function transliterateBengaliToEnglish(text) {
 // ==================================================
 // 📨 EMAILJS কনফিগারেশন (পাসওয়ার্ড রিসেটের জন্য)
 // ==================================================
-const EMAILJS_PUBLIC_KEY = "RyTeYPCeE11eHB-AL"; 
-const EMAILJS_SERVICE_ID = "service22"; 
-const EMAILJS_TEMPLATE_ID = "template_bf8ofq6"; 
+const EMAILJS_PUBLIC_KEY = "RyTeYPCeE11eHB-AL";
+const EMAILJS_SERVICE_ID = "service22";
+const EMAILJS_TEMPLATE_ID = "template_bf8ofq6";
 
 if (typeof emailjs !== 'undefined') {
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
@@ -42,7 +42,7 @@ if (typeof emailjs !== 'undefined') {
 // ⚙️ গ্লোবাল ভেরিয়েবলসমূহ
 // ==================================================
 const banglaMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
-const currentCalendarMonthIndex = new Date().getMonth(); 
+const currentCalendarMonthIndex = new Date().getMonth();
 
 let globalReceiptCounter = 1001;
 let globalExpenseCounter = 1001;
@@ -64,24 +64,25 @@ const pageTitles = {
 /// ডাটাবেজ ব্যাকআপ ডাটা
 let membersData = [];
 
-let donationEntries = []; 
+let globalTickerText = ""; // লাইভ নোটিশের টেক্সট ধরে রাখার জন্য
+let donationEntries = [];
 let expenseEntries = [];
-let autoIdCounter = 101; 
-let donationReceiptsStatus = {}; 
+let autoIdCounter = 101;
+let donationReceiptsStatus = {};
 
 let tempPaidMonths = [];
 let initialPaidMonths = [];
 let selectedMemberId = null;
 let memberToDelete = null;
 
-let pendingRegistrationData = null; 
+let pendingRegistrationData = null;
 let incomeChartInstance = null;
 let expenseChartInstance = null;
 
 // ==================================================
 // 🛠️ নেভিগেশন ও ব্রাউজার ব্যাক বাটন হ্যান্ডলার 
 // ==================================================
-window.addEventListener('popstate', function(event) {
+window.addEventListener('popstate', function (event) {
     if (event.state && event.state.sectionId) {
         historyPointer = event.state.pointer;
         showSection(event.state.sectionId, true);
@@ -99,7 +100,7 @@ window.addEventListener('popstate', function(event) {
 // কাস্টম কনফার্মেশন মোডাল উইন্ডো হেল্পার
 function showConfirmModal(message, onConfirm) {
     document.getElementById('deleteModalMessage').innerText = message;
-    document.getElementById('btnDeleteYes').onclick = function() {
+    document.getElementById('btnDeleteYes').onclick = function () {
         onConfirm();
         closeDeleteModal();
     };
@@ -129,7 +130,7 @@ async function loadAllDataFromSupabase() {
             .from('members')
             .select('*');
         if (mError) throw mError;
-        
+
         // ডাটাবেজ খালি থাকলে যেন খালি মেম্বার লিস্ট লোড হয়
         membersData = dbMembers || [];
 
@@ -157,7 +158,7 @@ async function loadAllDataFromSupabase() {
                 if (savedStatuses[entry.receiptNo] !== undefined) {
                     donationReceiptsStatus[entry.receiptNo] = savedStatuses[entry.receiptNo];
                 } else {
-                    donationReceiptsStatus[entry.receiptNo] = true; 
+                    donationReceiptsStatus[entry.receiptNo] = true;
                 }
             });
 
@@ -209,41 +210,43 @@ async function loadAllDataFromSupabase() {
         }
 
         // ডাটাবেজ থেকে ডাটা পাওয়ার পর সাজানো নিশ্চিত করা হচ্ছে
-            sortAllDataDescending(); 
+        sortAllDataDescending();
 
-            // ---- ডেটাবেজ থেকে লাইভ নোটিশ লোড করার কোড ----
-            let liveTickerMessage = "আবাবিল ফাউন্ডেশন কার্যক্রমে আপনাকে স্বাগতম! আমাদের সাথে যুক্ত হয়ে আর্তমানবতার সেবায় এগিয়ে আসুন।";
-            try {
-                const { data: configData, error: configError } = await supabaseClient
-                    .from('admin_settings')
-                    .select('ticker_text')
-                    .eq('id', 'config')
-                    .single();
-                if (!configError && configData && configData.ticker_text) {
-                    liveTickerMessage = configData.ticker_text;
-                }
-            } catch (err) {
-                console.warn("লাইভ নোটিশ লোড করা যায়নি:", err.message);
+        // ---- ডেটাবেজ থেকে লাইভ নোটিশ লোড করার কোড ----
+        let liveTickerMessage = "আবাবিল ফাউন্ডেশন কার্যক্রমে আপনাকে স্বাগতম! আমাদের নতুন মানবিক প্রজেক্টের কার্যক্রম শুরু হয়েছে।";
+        try {
+            const { data: configData, error: configError } = await supabaseClient
+                .from('admin_settings')
+                .select('ticker_text')
+                .eq('id', 'config')
+                .single();
+            if (!configError && configData && configData.ticker_text) {
+                liveTickerMessage = configData.ticker_text;
             }
-            
-            // হোম পেজে নোটিশ সেট করা
-            const tickerEl = document.getElementById('liveTickerText');
-            if (tickerEl) {
-                tickerEl.innerText = liveTickerMessage;
-            }
-            // প্যানেলের ইনপুট বক্সে নোটিশ সেট করা
-            const tickerInputEl = document.getElementById('tickerTextInput');
-            if (tickerInputEl) {
-                tickerInputEl.value = liveTickerMessage;
-            }
-            // ----------------------------------------------
-            
-            recalculateAllMembersDue();
-            refreshAllData();
         } catch (err) {
-            console.error("ডাটাবেজ কানেকশন ব্যর্থ:", err.message);
+            console.warn("লাইভ নোটিশ লোড করা যায়নি:", err.message);
         }
+
+        globalTickerText = liveTickerMessage; // গ্লোবাল ভেরিয়েবলে সেভ করা হলো
+
+        // হোম পেজে নোটিশ সেট করা
+        const tickerEl = document.getElementById('liveTickerText');
+        if (tickerEl) {
+            tickerEl.innerText = globalTickerText;
+        }
+        // প্যানেলের ইনপুট বক্সে নোটিশ সেট করা
+        const tickerInputEl = document.getElementById('tickerTextInput');
+        if (tickerInputEl) {
+            tickerInputEl.value = globalTickerText;
+        }
+
+
+        recalculateAllMembersDue();
+        refreshAllData();
+    } catch (err) {
+        console.error("ডাটাবেজ কানেকশন ব্যর্থ:", err.message);
     }
+}
 
 function showCustomPopup(icon, titleText, showBtn = true) {
     document.getElementById('statusModalIcon').innerText = icon;
@@ -261,7 +264,7 @@ function closeCustomPopup() {
 
 function syncAddressIfChecked() {
     const isChecked = document.getElementById('sameAddressCheckbox').checked;
-    if(isChecked) {
+    if (isChecked) {
         const permanentText = document.getElementById('regPermanentAddress').value;
         document.getElementById('regPresentAddress').value = permanentText;
     }
@@ -279,20 +282,20 @@ function copyPermanentToPresent(isChecked) {
 function handleMemberTypeChange(typeValue) {
     const amountBox = document.getElementById('dynamicAmountBox');
     const amountInput = document.getElementById('regMonthlyAmount');
-    if(typeValue === 'মাসিক ধার্যকৃত সদস্য') {
+    if (typeValue === 'মাসিক ধার্যকৃত সদস্য') {
         amountBox.style.display = 'flex';
         amountInput.required = true;
     } else {
         amountBox.style.display = 'none';
         amountInput.required = false;
-        amountInput.value = ''; 
+        amountInput.value = '';
     }
 }
 
 function handleShortFormTypeChange(typeValue) {
     const group = document.getElementById('shortFormAmountGroup');
     const input = document.getElementById('newMemberAmount');
-    if(typeValue === 'মাসিক ধার্যকৃত সদস্য') {
+    if (typeValue === 'মাসিক ধার্যকৃত সদস্য') {
         group.style.display = 'flex';
         input.required = true;
     } else {
@@ -303,14 +306,14 @@ function handleShortFormTypeChange(typeValue) {
 }
 
 function calculateIndividualDue(member) {
-    if(member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") {
+    if (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") {
         member.fixedTarget = 0;
         member.totalDue = 0;
         member.status = member.type === "রক্তদাতা" ? (member.status || "প্রস্তুত") : (member.type === "সাধারণ সদস্য" ? "সাধারণ সদস্য" : "স্থায়ী দাতা");
-        member.totalPaidAccumulated = member.totalPaidAccumulated || 0; 
+        member.totalPaidAccumulated = member.totalPaidAccumulated || 0;
         return;
     }
-    
+
     if (member.paidMonths && typeof member.paidMonths === 'string') {
         try {
             let trimmed = member.paidMonths.trim();
@@ -327,13 +330,13 @@ function calculateIndividualDue(member) {
                 .filter(m => m !== '');
         }
     }
-    if(!Array.isArray(member.paidMonths)) {
+    if (!Array.isArray(member.paidMonths)) {
         member.paidMonths = [];
     }
 
-    let totalMonthsApplicable = currentCalendarMonthIndex + 1; 
+    let totalMonthsApplicable = currentCalendarMonthIndex + 1;
     let paidCountInCurrentRange = 0;
-    
+
     for (let i = 0; i <= currentCalendarMonthIndex; i++) {
         if (member.paidMonths.includes(banglaMonths[i])) {
             paidCountInCurrentRange++;
@@ -352,17 +355,17 @@ function recalculateAllMembersDue() {
     });
 }
 
-window.onload = function() {
+window.onload = function () {
     sessionStorage.removeItem('exec_authenticated');
-    
+
     const initialHash = window.location.hash.replace('#', '') || 'homeView';
     window.history.replaceState({ sectionId: initialHash, pointer: 0 }, '', '#' + initialHash);
-    
+
     loadAllDataFromSupabase().then(() => {
         initializeDashboard();
-        showSection(initialHash, true); 
-        renderHomeCharts(); 
-        triggerHomeAnimations(); 
+        showSection(initialHash, true);
+        renderHomeCharts();
+        triggerHomeAnimations();
     });
 };
 
@@ -375,13 +378,13 @@ function initializeDashboard() {
     renderExpenseTable();
     populateReceiptDropdown();
     updateTargetSummary();
-    
+
     const titleEl = document.getElementById('currentPageTitle');
     if (titleEl) {
         titleEl.innerText = pageTitles['homeView'];
     }
 
-    window.addEventListener('click', function(e) {
+    window.addEventListener('click', function (e) {
         if (!e.target.matches('.three-dots-btn')) {
             document.querySelectorAll('.action-dropdown').forEach(dropdown => {
                 dropdown.classList.remove('show');
@@ -395,7 +398,7 @@ function initializeDashboard() {
 // ==================================================
 function getMonthlyIncomeData() {
     let monthlyValues = new Array(12).fill(0);
-    
+
     membersData.forEach(m => {
         let monthsArray = [];
         if (Array.isArray(m.paidMonths)) {
@@ -403,8 +406,8 @@ function getMonthlyIncomeData() {
         } else if (typeof m.paidMonths === 'string') {
             try {
                 monthsArray = JSON.parse(m.paidMonths);
-            } catch(e) {
-                monthsArray = m.paidMonths.split(',').map(s=>s.trim());
+            } catch (e) {
+                monthsArray = m.paidMonths.split(',').map(s => s.trim());
             }
         }
         monthsArray.forEach(mon => {
@@ -419,7 +422,7 @@ function getMonthlyIncomeData() {
         if (d.date) {
             let parts = d.date.split('/');
             if (parts.length === 3) {
-                let mIdx = parseInt(parts[1]) - 1; 
+                let mIdx = parseInt(parts[1]) - 1;
                 if (mIdx >= 0 && mIdx < 12) {
                     monthlyValues[mIdx] += (parseInt(d.amount) || 0);
                 }
@@ -450,12 +453,12 @@ function renderHomeCharts() {
     const expenseData = getMonthlyExpenseData();
 
     const gradualAnimationConfig = {
-        duration: 2000, 
-        easing: 'easeOutQuart', 
+        duration: 2000,
+        easing: 'easeOutQuart',
         delay: (context) => {
             let delay = 0;
             if (context.type === 'data' && context.mode === 'default') {
-                delay = context.dataIndex * 100; 
+                delay = context.dataIndex * 100;
             }
             return delay;
         }
@@ -464,23 +467,23 @@ function renderHomeCharts() {
     const ctxIncome = document.getElementById('incomeHomeChart').getContext('2d');
     if (incomeChartInstance) incomeChartInstance.destroy();
     incomeChartInstance = new Chart(ctxIncome, {
-        type: 'bar', 
+        type: 'bar',
         data: {
             labels: banglaMonths,
             datasets: [{
                 label: 'আয় (টাকা)',
                 data: incomeData,
-                backgroundColor: 'rgba(30, 64, 175, 0.75)', 
-                borderColor: 'rgba(30, 64, 175, 1)',       
+                backgroundColor: 'rgba(30, 64, 175, 0.75)',
+                borderColor: 'rgba(30, 64, 175, 1)',
                 borderWidth: 1.5,
-                borderRadius: 6 
+                borderRadius: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            animation: gradualAnimationConfig, 
+            animation: gradualAnimationConfig,
             scales: {
                 y: { beginAtZero: true, ticks: { font: { family: 'Kalpurush', size: 10 } } },
                 x: { ticks: { font: { family: 'Kalpurush', size: 9 } } }
@@ -491,23 +494,23 @@ function renderHomeCharts() {
     const ctxExpense = document.getElementById('expenseHomeChart').getContext('2d');
     if (expenseChartInstance) expenseChartInstance.destroy();
     expenseChartInstance = new Chart(ctxExpense, {
-        type: 'bar', 
+        type: 'bar',
         data: {
             labels: banglaMonths,
             datasets: [{
                 label: 'ব্যয় (টাকা)',
                 data: expenseData,
-                backgroundColor: 'rgba(239, 68, 68, 0.75)', 
-                borderColor: 'rgba(239, 68, 68, 1)',       
+                backgroundColor: 'rgba(239, 68, 68, 0.75)',
+                borderColor: 'rgba(239, 68, 68, 1)',
                 borderWidth: 1.5,
-                borderRadius: 6 
+                borderRadius: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            animation: gradualAnimationConfig, 
+            animation: gradualAnimationConfig,
             scales: {
                 y: { beginAtZero: true, ticks: { font: { family: 'Kalpurush', size: 10 } } },
                 x: { ticks: { font: { family: 'Kalpurush', size: 9 } } }
@@ -517,17 +520,17 @@ function renderHomeCharts() {
 }
 
 function toggleActionMenu(event, id) {
-    if (event) event.stopPropagation(); 
+    if (event) event.stopPropagation();
     const targetDropdown = document.getElementById('dropdown-' + id);
     document.querySelectorAll('.action-dropdown').forEach(dropdown => {
-        if(dropdown.id !== 'dropdown-' + id) dropdown.classList.remove('show');
+        if (dropdown.id !== 'dropdown-' + id) dropdown.classList.remove('show');
     });
     targetDropdown.classList.toggle('show');
 }
 
 function deleteMember(memberId) {
     memberToDelete = memberId;
-    showConfirmModal(`আপনি কি নিশ্চিত যে সদস্য আইডি: ${memberId} এর সমস্ত তথ্য ডিলিট করতে চান?`, function() {
+    showConfirmModal(`আপনি কি নিশ্চিত যে সদস্য আইডি: ${memberId} এর সমস্ত তথ্য ডিলিট করতে চান?`, function () {
         executeDeleteMember();
     });
 }
@@ -546,7 +549,7 @@ async function executeDeleteMember() {
             closeDeleteModal();
             closeCustomPopup();
             refreshAllData();
-            
+
             showCustomPopup("✅", `সদস্য আইডি: ${memberToDelete} মুছে ফেলা হয়েছে।`, true);
             memberToDelete = null;
         } catch (err) {
@@ -565,7 +568,7 @@ async function deleteDonationEntry(index) {
     const entry = donationEntries[index];
     const receiptNo = entry.receiptNo;
 
-    showConfirmModal(`আপনি কি নিশ্চিত যে এই রেকর্ডটি (${receiptNo}) মুছে ফেলতে চান?`, async function() {
+    showConfirmModal(`আপনি কি নিশ্চিত যে এই রেকর্ডটি (${receiptNo}) মুছে ফেলতে চান?`, async function () {
         showCustomPopup("⏳", "ডাটাবেজ থেকে তথ্য ডিলিট হচ্ছে...", false);
         try {
             const { error } = await supabaseClient
@@ -575,7 +578,7 @@ async function deleteDonationEntry(index) {
             if (error) throw error;
 
             donationEntries.splice(index, 1);
-            delete donationReceiptsStatus[receiptNo]; 
+            delete donationReceiptsStatus[receiptNo];
             closeCustomPopup();
             showCustomPopup("✅", 'রেকর্ডটি মুছে ফেলা হয়েছে।', true);
             renderDonationTable();
@@ -589,16 +592,16 @@ async function deleteDonationEntry(index) {
 
 function editMember(memberId) {
     const member = membersData.find(m => m.id === memberId);
-    if(member) {
+    if (member) {
         document.getElementById('editMemberId').value = member.id;
         document.getElementById('editMemberName').value = member.name;
-        document.getElementById('editMemberFixedTarget').value = member.fixedTarget || 0; 
+        document.getElementById('editMemberFixedTarget').value = member.fixedTarget || 0;
         document.getElementById('editMemberPhone').value = member.phone;
         document.getElementById('editMemberAddress').value = member.address;
         document.getElementById('editMemberProfession').value = member.profession || '';
         document.getElementById('editMemberBlood').value = member.blood;
         document.getElementById('editMemberDueDisplay').value = member.totalDue + ' টাকা';
-        
+
         document.getElementById('editMemberModal').style.display = 'flex';
     }
 }
@@ -608,21 +611,21 @@ function closeEditModal() {
 }
 
 function closeEditModalOutside(event) {
-    if(event.target.id === 'editMemberModal') closeEditModal();
+    if (event.target.id === 'editMemberModal') closeEditModal();
 }
 
 async function saveEditedMember(event) {
     event.preventDefault();
     const id = document.getElementById('editMemberId').value;
     const member = membersData.find(m => m.id === id);
-    if(member) {
+    if (member) {
         member.name = document.getElementById('editMemberName').value;
-        member.fixedTarget = parseInt(document.getElementById('editMemberFixedTarget').value) || 0; 
+        member.fixedTarget = parseInt(document.getElementById('editMemberFixedTarget').value) || 0;
         member.phone = document.getElementById('editMemberPhone').value;
         member.address = document.getElementById('editMemberAddress').value;
         member.profession = document.getElementById('editMemberProfession').value;
         member.blood = document.getElementById('editMemberBlood').value;
-        
+
         calculateIndividualDue(member);
 
         showCustomPopup("⏳", "তথ্য আপডেট হচ্ছে...", false);
@@ -631,7 +634,7 @@ async function saveEditedMember(event) {
                 .from('members')
                 .update({
                     name: member.name,
-                    fixedTarget: member.fixedTarget, 
+                    fixedTarget: member.fixedTarget,
                     phone: member.phone,
                     address: member.address,
                     profession: member.profession,
@@ -652,7 +655,7 @@ async function saveEditedMember(event) {
 }
 
 function refreshAllData() {
-    sortAllDataDescending(); 
+    sortAllDataDescending();
 
     updateTargetSummary();
     renderTargetTable();
@@ -660,22 +663,31 @@ function refreshAllData() {
     renderMemberDetailsTable();
     renderPublicMemberList();
     updateIncomeStatistics('1m');
-    renderDonationTable();       
-    renderGeneralIncomeTable();  
+    renderDonationTable();
+    renderGeneralIncomeTable();
     renderExpenseTable();
     populateReceiptDropdown();
     generateReceipt();
-    renderHomeCharts(); 
+    renderHomeCharts();
 
     // ---- লাইভ তথ্য বারের লেখা ডাইনামিক করার অংশ ----
     const totalDonors = membersData.filter(m => m.blood && m.blood !== '---' && m.blood.trim() !== "").length;
     const totalMembers = membersData.filter(m => m.type !== "রক্তদাতা").length;
 
     const dynamicTickerMessage = `আবাবিল ফাউন্ডেশন ডিজিটাল ডাটাবেজে আপনাকে স্বাগতম! বর্তমানে আমাদের মোট সাধারণ সদস্য: ${translateToBengaliNumber(totalMembers)} জন এবং নিবন্ধিত রক্তদাতা: ${translateToBengaliNumber(totalDonors)} জন। জরুরি রক্তের প্রয়োজনে আমাদের ব্লাড ব্যাংক অপশনটি ব্যবহার করুন। ধন্যবাদ।`;
-    
+
+    // ---- লাইভ তথ্য বারের লেখা সেট করার অংশ ----
     const tickerEl = document.getElementById('liveTickerText');
     if (tickerEl) {
-        tickerEl.innerText = dynamicTickerMessage;
+        // যদি ডাটাবেজে আপনার সেভ করা কাস্টম নোটিশ থাকে তবে সেটি দেখাবে, অন্যথায় স্বয়ংক্রিয় ডাইনামিক তথ্য দেখাবে
+        if (globalTickerText && globalTickerText.trim() !== "") {
+            tickerEl.innerText = globalTickerText;
+        } else {
+            const totalDonors = membersData.filter(m => m.blood && m.blood !== '---' && m.blood.trim() !== "").length;
+            const totalMembers = membersData.filter(m => m.type !== "রক্তদাতা").length;
+            const dynamicTickerMessage = `আবাবিল ফাউন্ডেশন ডিজিটাল ডাটাবেজে আপনাকে স্বাগতম! বর্তমানে আমাদের মোট সাধারণ সদস্য: ${translateToBengaliNumber(totalMembers)} জন এবং নিবন্ধিত রক্তদাতা: ${translateToBengaliNumber(totalDonors)} জন। জরুরি রক্তের প্রয়োজনে আমাদের ব্লাড ব্যাংক অপশনটি ব্যবহার করুন। ধন্যবাদ।`;
+            tickerEl.innerText = dynamicTickerMessage;
+        }
     }
     // ---------------------------------------------
 }
@@ -716,7 +728,7 @@ function switchExecutiveTab(tabId) {
     document.querySelectorAll('.executive-sub-content').forEach(content => {
         content.style.display = 'none';
     });
-    
+
     document.getElementById('tabBtnTarget').classList.remove('active');
     document.getElementById('tabBtnDetails').classList.remove('active');
     document.getElementById('tabBtnIncomeEntry').classList.remove('active');
@@ -754,7 +766,7 @@ function toggleSubmitButton(isChecked) {
 
 async function handleDirectRegistration(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('regName').value;
     const father = document.getElementById('regFatherName').value;
     const mother = document.getElementById('regMotherName').value;
@@ -772,7 +784,7 @@ async function handleDirectRegistration(event) {
     const permAddress = document.getElementById('regPermanentAddress').value;
     const presAddress = document.getElementById('regPresentAddress').value;
     const memberType = document.getElementById('regMemberType').value;
-    
+
     let amount = 0;
     if (memberType === 'মাসিক ধার্যকৃত সদস্য') {
         amount = parseInt(document.getElementById('regMonthlyAmount').value) || 0;
@@ -787,7 +799,7 @@ async function handleDirectRegistration(event) {
             id: id, name: name, fatherName: father, motherName: mother, dob: dob,
             nationality: nationality, religion: religion, profession: profession,
             phone: phone, permAddress: permAddress, address: presAddress, type: memberType,
-            fixedTarget: amount, blood: blood, lastPaid: 0, lastPaidAmount: 0, lastPaidMonths: [], paidMonths: [], 
+            fixedTarget: amount, blood: blood, lastPaid: 0, lastPaidAmount: 0, lastPaidMonths: [], paidMonths: [],
             totalDue: 0, totalPaidAccumulated: 0, status: "", latestReceiptNo: "", receiptSent: false
         };
 
@@ -803,7 +815,7 @@ async function handleDirectRegistration(event) {
             autoIdCounter++;
 
             closeCustomPopup();
-            
+
             document.getElementById('successPopUpModal').style.display = 'flex';
             document.getElementById('mainRegistrationForm').reset();
             document.getElementById('dynamicAmountBox').style.display = 'none';
@@ -820,7 +832,7 @@ async function handleDirectRegistration(event) {
 
 function closeSuccessModal() {
     document.getElementById('successPopUpModal').style.display = 'none';
-    showSection('homeView'); 
+    showSection('homeView');
 }
 
 function openEntryModal() {
@@ -845,9 +857,9 @@ async function saveNewMember(event) {
     const address = document.getElementById('newMemberAddress').value;
     const phone = document.getElementById('newMemberPhone').value;
     const memberType = document.getElementById('newMemberTypeSelect').value;
-    
+
     let amount = 0;
-    if(memberType === 'মাসিক ধার্যকৃত সদস্য') {
+    if (memberType === 'মাসিক ধার্যকৃত সদস্য') {
         amount = parseInt(document.getElementById('newMemberAmount').value) || 0;
     }
     const blood = document.getElementById('newMemberBlood').value;
@@ -866,8 +878,8 @@ async function saveNewMember(event) {
             .insert([newMember]);
         if (error) throw error;
 
-        autoIdCounter++; 
-        
+        autoIdCounter++;
+
         await loadAllDataFromSupabase();
 
         closeEntryModal();
@@ -880,12 +892,12 @@ async function saveNewMember(event) {
 function openDonationModal() {
     document.getElementById('donationModal').style.display = 'flex';
     document.getElementById('donReceiptNo').value = 'AF-REC-' + globalReceiptCounter;
-    
+
 
     // ডিফল্ট কোনো তারিখ লেখা থাকবে না, ৩টি ইনপুটই খালি রাখা হলো
-document.getElementById('quickDonationDay').value = "";
-document.getElementById('quickDonationMonth').value = "";
-document.getElementById('quickDonationYear').value = "";
+    document.getElementById('quickDonationDay').value = "";
+    document.getElementById('quickDonationMonth').value = "";
+    document.getElementById('quickDonationYear').value = "";
 }
 
 function closeDonationModal() {
@@ -908,7 +920,7 @@ function showSection(sectionId, isNavigating = false) {
     if (targetEl) {
         targetEl.style.display = 'block';
     }
-    
+
     if (sectionId === 'executiveSection') {
         const isAuthenticated = sessionStorage.getItem('exec_authenticated') === 'true';
         if (isAuthenticated) {
@@ -932,18 +944,18 @@ function showSection(sectionId, isNavigating = false) {
     currentSectionId = sectionId;
 
     closeMenu();
-    if(sectionId === 'incomeSection') updateIncomeStatistics('1m');
-    if(sectionId === 'memberListSection') renderPublicMemberList();
-    
-    if(sectionId === 'homeView') {
+    if (sectionId === 'incomeSection') updateIncomeStatistics('1m');
+    if (sectionId === 'memberListSection') renderPublicMemberList();
+
+    if (sectionId === 'homeView') {
         setTimeout(renderHomeCharts, 120);
-        setTimeout(triggerHomeAnimations, 200); 
+        setTimeout(triggerHomeAnimations, 200);
     }
 
     document.querySelectorAll('.bottom-nav-item').forEach(link => {
         link.classList.remove('active');
     });
-    
+
     let mobNavItems = document.querySelectorAll('.bottom-nav-item');
     if (sectionId === 'homeView' && mobNavItems[0]) mobNavItems[0].classList.add('active');
     if (sectionId === 'regFormSection' && mobNavItems[1]) mobNavItems[1].classList.add('active');
@@ -960,39 +972,39 @@ function closeDonationModalOutside(event) {
 async function saveDonationEntry(event) {
     event.preventDefault();
     const receiptNo = document.getElementById('donReceiptNo').value;
-    const rawDate = document.getElementById('donDate').value; 
+    const rawDate = document.getElementById('donDate').value;
     const name = document.getElementById('donName').value;
     const address = document.getElementById('donAddress').value;
     const phone = document.getElementById('donPhone').value;
     const amount = parseInt(document.getElementById('donAmount').value) || 0;
     const sector = document.getElementById('donSector').value;
-    const project = document.getElementById('donProject').value; 
+    const project = document.getElementById('donProject').value;
 
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
 
     const entry = {
         receiptNo: receiptNo, date: dateStr, name: name, address: address,
-        phone: phone, amount: amount, sector: sector, project: project 
+        phone: phone, amount: amount, sector: sector, project: project
     };
 
     showCustomPopup("⏳", "আয়ের খাত ডাটাবেজে যাচ্ছে...", false);
     try {
-            const { error } = await supabaseClient
-                .from('donations')
-                .insert([entry]);
-            if (error) throw error;
+        const { error } = await supabaseClient
+            .from('donations')
+            .insert([entry]);
+        if (error) throw error;
 
-            donationReceiptsStatus[receiptNo] = false; 
-            localStorage.setItem('ababil_donation_receipt_status', JSON.stringify(donationReceiptsStatus));
-            
-            globalReceiptCounter++; 
+        donationReceiptsStatus[receiptNo] = false;
+        localStorage.setItem('ababil_donation_receipt_status', JSON.stringify(donationReceiptsStatus));
 
-            await loadAllDataFromSupabase();
+        globalReceiptCounter++;
 
-            closeDonationModal();
-            closeCustomPopup();
-        
+        await loadAllDataFromSupabase();
+
+        closeDonationModal();
+        closeCustomPopup();
+
         showCustomPopup("✅", "আয়ের খাত সফলভাবে এন্ট্রি হয়েছে।", true);
     } catch (err) {
         closeCustomPopup();
@@ -1001,23 +1013,23 @@ async function saveDonationEntry(event) {
 }
 
 function generateDonationReceiptAction(receiptNo) {
-    donationReceiptsStatus[receiptNo] = true; 
-    renderDonationTable(); 
-    updateIncomeStatistics('1m'); 
-    
+    donationReceiptsStatus[receiptNo] = true;
+    renderDonationTable();
+    updateIncomeStatistics('1m');
+
     showCustomPopup("⏳", "রশিদ জেনারেট হচ্ছে...", false);
     setTimeout(() => {
         closeCustomPopup();
-        showDirectDonationReceipt(receiptNo); 
+        showDirectDonationReceipt(receiptNo);
     }, 1000);
 }
 
 function showDirectDonationReceipt(receiptNo) {
     const entry = donationEntries.find(e => e.receiptNo === receiptNo);
-    if(entry) {
+    if (entry) {
         showSection('receiptSection');
-        document.getElementById('receiptMemberSelect').value = ""; 
-        
+        document.getElementById('receiptMemberSelect').value = "";
+
         document.getElementById('memberReceiptView').style.display = 'none';
         document.getElementById('donationReceiptView').style.display = 'block';
 
@@ -1077,17 +1089,17 @@ function liveSearchIncome() {
     let value = document.getElementById('incomeSearchInput').value.toLowerCase().trim();
     let table = document.getElementById('mainIncomeTable');
     let tr = table.getElementsByTagName('tr');
-    
+
     for (let i = 1; i < tr.length; i++) {
-        let idOrReceiptCell = tr[i].getElementsByTagName('td')[1]; 
-        let sourceCell = tr[i].getElementsByTagName('td')[2]; 
-        let descCell = tr[i].getElementsByTagName('td')[3]; 
-        
+        let idOrReceiptCell = tr[i].getElementsByTagName('td')[1];
+        let sourceCell = tr[i].getElementsByTagName('td')[2];
+        let descCell = tr[i].getElementsByTagName('td')[3];
+
         if (idOrReceiptCell || sourceCell || descCell) {
             let idText = (idOrReceiptCell.textContent || idOrReceiptCell.innerText).toLowerCase();
             let srcText = (sourceCell.textContent || sourceCell.innerText).toLowerCase();
             let descText = (descCell.textContent || descCell.innerText).toLowerCase();
-            
+
             if (idText.indexOf(value) > -1 || srcText.indexOf(value) > -1 || descText.indexOf(value) > -1) {
                 tr[i].style.display = "";
             } else {
@@ -1101,15 +1113,15 @@ function liveSearchTargetMembers() {
     let value = document.getElementById('targetSearchInput').value.toLowerCase().trim();
     let table = document.getElementById('targetTableBody');
     let tr = table.getElementsByTagName('tr');
-    
+
     for (let i = 0; i < tr.length; i++) {
-        let idCell = tr[i].getElementsByTagName('td')[0]; 
-        let nameCell = tr[i].getElementsByTagName('td')[1]; 
-        
+        let idCell = tr[i].getElementsByTagName('td')[0];
+        let nameCell = tr[i].getElementsByTagName('td')[1];
+
         if (idCell || nameCell) {
             let idText = (idCell.textContent || idCell.innerText).toLowerCase();
             let nameText = (nameCell.textContent || nameCell.innerText).toLowerCase();
-            
+
             if (idText.indexOf(value) > -1 || nameText.indexOf(value) > -1) {
                 tr[i].style.display = "";
             } else {
@@ -1121,22 +1133,22 @@ function liveSearchTargetMembers() {
 
 function updateIncomeStatistics(period) {
     document.querySelectorAll('#incomeSection .filter-btn').forEach(btn => btn.classList.remove('active'));
-    if(period === '1m') document.getElementById('btn1m').classList.add('active');
-    if(period === '6m') document.getElementById('btn6m').classList.add('active');
-    if(period === '1y') document.getElementById('btn1y').classList.add('active');
+    if (period === '1m') document.getElementById('btn1m').classList.add('active');
+    if (period === '6m') document.getElementById('btn6m').classList.add('active');
+    if (period === '1y') document.getElementById('btn1y').classList.add('active');
 
     let memberIncomeSum = membersData.reduce((sum, m) => sum + (parseInt(m.totalPaidAccumulated) || 0), 0);
     let extraDonationSum = donationEntries.reduce((sum, e) => sum + e.amount, 0);
     let grandTotalIncome = memberIncomeSum + extraDonationSum;
-    
+
     document.getElementById('totalIncomeAmount').innerText = grandTotalIncome.toLocaleString('bn-BD') + '/-';
     document.getElementById('incomePeriodTitle').innerText = `সর্বমোট আয়ের পরিসংখ্যান (${period === '1m' ? 'শেষ ১ মাস' : period === '6m' ? 'শেষ ৬ মাস' : 'শেষ ১ বছর'})`;
 
     let tableHtml = '';
-    
-    if(membersData.some(m => m.lastPaid > 0) || donationEntries.length > 0) {
+
+    if (membersData.some(m => m.lastPaid > 0) || donationEntries.length > 0) {
         membersData.forEach(m => {
-            if(m.lastPaid > 0) {
+            if (m.lastPaid > 0) {
                 let rNo = m.latestReceiptNo || "AF-REC-1000";
                 let truncatedName = truncateText(m.name, 25, 'বিবরণ/সংগ্রাহক');
                 tableHtml += `<tr>
@@ -1164,9 +1176,9 @@ function updateIncomeStatistics(period) {
     } else {
         tableHtml += `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); font-style:italic;">কোনো আয়ের রেকর্ড এখনো যোগ করা হয়নি।</td></tr>`;
     }
-    
+
     document.getElementById('incomeTableBody').innerHTML = tableHtml;
-    liveSearchIncome(); 
+    liveSearchIncome();
 }
 
 function updateTargetSummary() {
@@ -1181,20 +1193,20 @@ function updateTargetSummary() {
 function renderTargetTable(filter = 'all') {
     let html = '';
     let targetMembers = membersData.filter(m => m.type === 'মাসিক ধার্যকৃত সদস্য');
-    
-    if(targetMembers.length === 0) {
+
+    if (targetMembers.length === 0) {
         html = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); font-style:italic;">বর্তমানে কোনো মাসিক ধার্যকৃত সদস্যের ডাটা নেই।</td></tr>`;
         document.getElementById('targetTableBody').innerHTML = html;
         return;
     }
-    
+
     targetMembers.forEach(m => {
         if (filter === 'paid' && m.status !== 'বকেয়ামুক্ত') return;
         if (filter === 'due' && m.status !== 'বকেয়া') return;
 
         let badge = m.status === 'বকেয়া' ? 'badge-warning' : 'badge-success';
-        let receiptStatusCell = m.receiptSent ? 
-            `<span class="receipt-status-sent" onclick="showMemberReceiptDirect('${m.id}')">রশিদ পাঠানো হয়েছে</span>` : 
+        let receiptStatusCell = m.receiptSent ?
+            `<span class="receipt-status-sent" onclick="showMemberReceiptDirect('${m.id}')">রশিদ পাঠানো হয়েছে</span>` :
             `<span class="receipt-status-send" onclick="sendReceipt('${m.id}')">রশিদ পাঠানো হয়নি</span>`;
 
         html += `<tr style="border-bottom: 1.5px solid var(--border);">
@@ -1220,7 +1232,7 @@ function renderTargetTable(filter = 'all') {
                     <p style="margin: 2px 0;"><strong>👤 সদস্যের ধরন:</strong> ${m.type}</p>
                     <p style="margin: 2px 0;"><strong>💰 ধার্য (মাসিক):</strong> ${m.fixedTarget}/-</p>
                     <p style="margin: 2px 0;"><strong>📥 সর্বশেষ জমা:</strong> ${m.lastPaid}/-</p>
-                    <p style="margin: 2px 0;"><strong>⚠️ বকেয়া:</strong> <span style="color:${m.totalDue > 0 ? 'var(--primary)':'var(--success)'}; font-weight:bold;">${m.totalDue}/-</span></p>
+                    <p style="margin: 2px 0;"><strong>⚠️ বকেয়া:</strong> <span style="color:${m.totalDue > 0 ? 'var(--primary)' : 'var(--success)'}; font-weight:bold;">${m.totalDue}/-</span></p>
                     <p style="margin: 2px 0;"><strong>📌 অবস্থা:</strong> <span class="badge ${badge}">${m.status}</span></p>
                 </div>
             </td>
@@ -1232,7 +1244,7 @@ function renderTargetTable(filter = 'all') {
 function renderPublicMemberList() {
     const tbody = document.getElementById('publicMemberListBody');
     if (!tbody) return;
-    
+
     const generalMembers = membersData.filter(m => m.type !== "রক্তদাতা");
 
     if (generalMembers.length === 0) {
@@ -1257,7 +1269,7 @@ async function sendReceipt(memberId) {
     let member = membersData.find(m => m.id === memberId);
     if (member) {
         member.receiptSent = true;
-        
+
         showCustomPopup("⏳", "রশিদ তৈরি হচ্ছে.....", false);
         try {
             const { error } = await supabaseClient
@@ -1266,7 +1278,7 @@ async function sendReceipt(memberId) {
                 .eq('id', memberId);
             if (error) throw error;
 
-            renderTargetTable(); 
+            renderTargetTable();
             setTimeout(() => {
                 closeCustomPopup();
                 showMemberReceiptDirect(memberId);
@@ -1286,16 +1298,16 @@ function showMemberReceiptDirect(memberId) {
 
 function filterMembers(type) {
     document.querySelectorAll('#executiveSection .filter-btn').forEach(btn => btn.classList.remove('active'));
-    if(type === 'all') document.getElementById('tgtBtnAll').classList.add('active');
-    if(type === 'paid') document.getElementById('tgtBtnPaid').classList.add('active');
-    if(type === 'due') document.getElementById('tgtBtnDue').classList.add('active');
+    if (type === 'all') document.getElementById('tgtBtnAll').classList.add('active');
+    if (type === 'paid') document.getElementById('tgtBtnPaid').classList.add('active');
+    if (type === 'due') document.getElementById('tgtBtnDue').classList.add('active');
     renderTargetTable(type);
 }
 
 function openMemberModal(id) {
     selectedMemberId = id;
     const member = membersData.find(m => m.id === id);
-    if(member) {
+    if (member) {
         calculateIndividualDue(member);
         document.getElementById('profName').innerText = member.name;
         document.getElementById('profId').innerText = member.id;
@@ -1303,15 +1315,15 @@ function openMemberModal(id) {
         document.getElementById('profPhone').innerText = member.phone;
         document.getElementById('profBlood').innerText = member.blood;
         document.getElementById('profAddress').innerText = member.address;
-        
+
         document.getElementById('profFixedTarget').innerText = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" ? member.type : member.fixedTarget + '/-');
-        
+
         tempPaidMonths = [...member.paidMonths];
         initialPaidMonths = [...member.paidMonths];
 
         updateModalTemporaryDues(member);
-        
-        if(member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") {
+
+        if (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") {
             document.getElementById('monthListTitle').style.display = 'none';
             document.getElementById('monthsGridContainer').style.display = 'none';
         } else {
@@ -1329,7 +1341,7 @@ function updateModalTemporaryDues(member) {
         document.getElementById('profTotalPaid').innerText = (member.totalPaidAccumulated || 0) + '/-';
         return;
     }
-    let totalMonthsApplicable = currentCalendarMonthIndex + 1; 
+    let totalMonthsApplicable = currentCalendarMonthIndex + 1;
     let paidCountInCurrentRange = 0;
     for (let i = 0; i <= currentCalendarMonthIndex; i++) {
         if (tempPaidMonths.includes(banglaMonths[i])) {
@@ -1338,7 +1350,7 @@ function updateModalTemporaryDues(member) {
     }
     let dueMonthsCount = totalMonthsApplicable - paidCountInCurrentRange;
     if (dueMonthsCount < 0) dueMonthsCount = 0;
-    
+
     let tempDue = dueMonthsCount * member.fixedTarget;
     let tempPaidAccumulated = tempPaidMonths.length * member.fixedTarget;
 
@@ -1348,13 +1360,13 @@ function updateModalTemporaryDues(member) {
 
 function renderMonthsGrid(member) {
     const container = document.getElementById('monthsGridContainer');
-    container.innerHTML = ''; 
+    container.innerHTML = '';
     banglaMonths.forEach(month => {
         const isPaid = tempPaidMonths.includes(month);
         const card = document.createElement('div');
         card.className = `month-card ${isPaid ? 'paid' : ''}`;
         card.innerHTML = `<span class="month-name">${month}</span><span class="month-amount">${isPaid ? '✅ পরিশোধিত' : member.fixedTarget + '/-'}</span>`;
-        card.onclick = function() { toggleMonthPaymentTemp(member.id, month); };
+        card.onclick = function () { toggleMonthPaymentTemp(member.id, month); };
         container.appendChild(card);
     });
 }
@@ -1363,12 +1375,12 @@ function toggleMonthPaymentTemp(memberId, monthName) {
     let member = membersData.find(m => m.id === memberId);
     if (member && member.type !== "স্থায়ী দাতা সদস্য" && member.type !== "সাধারণ সদস্য" && member.type !== "রক্তদাতা") {
         const monthIndex = tempPaidMonths.indexOf(monthName);
-        if (monthIndex > -1) { 
-            tempPaidMonths.splice(monthIndex, 1); 
-        } else { 
-            tempPaidMonths.push(monthName); 
+        if (monthIndex > -1) {
+            tempPaidMonths.splice(monthIndex, 1);
+        } else {
+            tempPaidMonths.push(monthName);
         }
-        
+
         updateModalTemporaryDues(member);
         renderMonthsGrid(member);
     }
@@ -1380,12 +1392,12 @@ async function saveMemberModalChanges() {
         if (member.type !== "স্থায়ী দাতা সদস্য" && member.type !== "সাধারণ সদস্য" && member.type !== "রক্তদাতা") {
             let newlyPaidMonths = tempPaidMonths.filter(m => !initialPaidMonths.includes(m));
             let paidAmount = newlyPaidMonths.length * member.fixedTarget;
-            
+
             member.paidMonths = [...tempPaidMonths];
             member.lastPaidAmount = paidAmount;
             member.lastPaidMonths = [...newlyPaidMonths];
-            member.lastPaid = paidAmount; 
-            
+            member.lastPaid = paidAmount;
+
             if (paidAmount > 0) {
                 member.receiptSent = false;
                 member.latestReceiptNo = 'AF-REC-' + globalReceiptCounter++;
@@ -1408,7 +1420,7 @@ async function saveMemberModalChanges() {
             closeMemberModal();
             closeCustomPopup();
             refreshAllData();
-            
+
             showCustomPopup("✅", "পেমেন্ট সফলভাবে সম্পন্ন হয়েছে।", true);
         } catch (err) {
             closeCustomPopup();
@@ -1438,7 +1450,7 @@ function toggleMemberDetailsRow(id) {
 
 function renderMemberDetailsTable() {
     const tbody = document.getElementById('memberDetailsTableBody');
-    if(membersData.length === 0) {
+    if (membersData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted); font-style:italic;">নিবন্ধিত কোনো সদস্য পাওয়া যায়নি।</td></tr>`;
         return;
     }
@@ -1482,7 +1494,7 @@ function renderMemberDetailsTable() {
 }
 
 function renderBloodTable(filterGroup = 'All') {
-    let html = ''; 
+    let html = '';
     let count = 0;
     const gridContainer = document.getElementById('bloodDonorGrid');
     if (!gridContainer) return;
@@ -1502,9 +1514,9 @@ function renderBloodTable(filterGroup = 'All') {
             if (filterGroup !== 'O-' && filterGroup !== 'A-' && m.blood !== filterGroup) return;
         }
         count++;
-        
+
         let donorAddress = m.address || '---';
-        
+
         // --- ৩ মাস (৯০ দিন) স্বয়ংক্রিয় দিন ও মাস গণনার লজিক ---
         let donorStatus = 'প্রস্তুত';
         let countdownText = 'রক্তদানে প্রস্তুত';
@@ -1514,20 +1526,20 @@ function renderBloodTable(filterGroup = 'All') {
         if (m.last_donation_date) {
             // আমাদের তৈরি করা ক্রস-ব্রাউজার নিরাপদ ডেট পার্সার ব্যবহার
             let lastDate = parseLocalDate(m.last_donation_date);
-            
+
             if (lastDate) {
                 let nextDate = new Date(lastDate);
                 nextDate.setMonth(nextDate.getMonth() + 3); // ৩ মাস পরবর্তী তারিখ
-                
+
                 let today = new Date();
-                today.setHours(0,0,0,0);
-                nextDate.setHours(0,0,0,0);
-                
+                today.setHours(0, 0, 0, 0);
+                nextDate.setHours(0, 0, 0, 0);
+
                 // যদি ৩ মাস পার না হয়ে থাকে (রক্তদানে এখনও বাকি আছে)
                 if (today < nextDate) {
                     donorStatus = 'অপ্রস্তুত';
                     isEligibleToDonate = false; // ৩ মাস পার হওয়ার আগে বাটন দেখাবে না
-                    
+
                     // মাস এবং দিন আলাদা করার হিসাব
                     let tempDate = new Date(today);
                     let diffMonths = 0;
@@ -1541,11 +1553,11 @@ function renderBloodTable(filterGroup = 'All') {
                         }
                     }
                     let diffDays = Math.floor((nextDate - tempDate) / (1000 * 60 * 60 * 24));
-                    
+
                     // বাংলায় সংখ্যা রূপান্তর
                     let bnMonths = translateToBengaliNumber(diffMonths);
                     let bnDays = translateToBengaliNumber(diffDays);
-                    
+
                     if (diffMonths > 0 && diffDays > 0) {
                         countdownText = `রক্তদানে বাকি: ${bnMonths} মাস ${bnDays} দিন`;
                     } else if (diffMonths > 0) {
@@ -1560,7 +1572,7 @@ function renderBloodTable(filterGroup = 'All') {
 
         let donationCount = m.donation_count || 0;
         let cleanPhone = m.phone ? m.phone.replace(/[^0-9]/g, '') : '';
-        
+
         let whatsappPhone = cleanPhone.startsWith('0') ? '88' + cleanPhone : cleanPhone;
         let whatsappLink = `https://wa.me/${whatsappPhone}?text=আসসালামু আলাইকুম, আবাবিল ব্লাড ব্যাংকের মাধ্যমে আপনার রক্তদাতার তথ্য পেয়ে যোগাযোগ করছি। আপনি কি এখন রক্তদানে প্রস্তুত আছেন?`;
 
@@ -1633,17 +1645,17 @@ function editBloodDonor(memberId) {
         document.getElementById('editDonorBloodGroup').value = member.blood || 'O+';
         document.getElementById('editDonorPhone').value = member.phone;
 
-// ডাটাবেজের YYYY-MM-DD ফরম্যাট থেকে ভিউয়ার ও এডিটের জন্য DD/MM/YYYY ফরম্যাটে রূপান্তর
-let displayDate = '';
-if (member.last_donation_date) {
-    const parsedDate = parseLocalDate(member.last_donation_date);
-    if (parsedDate) {
-        displayDate = `${String(parsedDate.getDate()).padStart(2, '0')}/${String(parsedDate.getMonth() + 1).padStart(2, '0')}/${parsedDate.getFullYear()}`;
-    }
-}
-document.getElementById('editDonorLastDonationDate').value = displayDate;
-document.getElementById('editDonorDonationCount').value = member.donation_count || 0;
-        
+        // ডাটাবেজের YYYY-MM-DD ফরম্যাট থেকে ভিউয়ার ও এডিটের জন্য DD/MM/YYYY ফরম্যাটে রূপান্তর
+        let displayDate = '';
+        if (member.last_donation_date) {
+            const parsedDate = parseLocalDate(member.last_donation_date);
+            if (parsedDate) {
+                displayDate = `${String(parsedDate.getDate()).padStart(2, '0')}/${String(parsedDate.getMonth() + 1).padStart(2, '0')}/${parsedDate.getFullYear()}`;
+            }
+        }
+        document.getElementById('editDonorLastDonationDate').value = displayDate;
+        document.getElementById('editDonorDonationCount').value = member.donation_count || 0;
+
         document.getElementById('editBloodDonorModal').style.display = 'flex';
     }
 }
@@ -1666,20 +1678,20 @@ async function saveEditedBloodDonor(event) {
         member.blood = document.getElementById('editDonorBloodGroup').value;
         member.phone = document.getElementById('editDonorPhone').value;
 
-// এডিট করা তারিখটি সঠিকভাবে প্রসেস করা
-const rawEditDate = document.getElementById('editDonorLastDonationDate').value.trim();
-let dbEditDate = null;
-if (rawEditDate) {
-    const parsedDate = parseLocalDate(rawEditDate);
-    if (!parsedDate) {
-        showCustomPopup("⚠️", "রক্তদানের তারিখটি সঠিক ফরম্যাটে লিখুন (দিন/মাস/বছর)। যেমন: 10/06/2026", true);
-        return;
-    }
-    dbEditDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
-}
+        // এডিট করা তারিখটি সঠিকভাবে প্রসেস করা
+        const rawEditDate = document.getElementById('editDonorLastDonationDate').value.trim();
+        let dbEditDate = null;
+        if (rawEditDate) {
+            const parsedDate = parseLocalDate(rawEditDate);
+            if (!parsedDate) {
+                showCustomPopup("⚠️", "রক্তদানের তারিখটি সঠিক ফরম্যাটে লিখুন (দিন/মাস/বছর)। যেমন: 10/06/2026", true);
+                return;
+            }
+            dbEditDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
+        }
 
-member.last_donation_date = dbEditDate;
-member.donation_count = parseInt(document.getElementById('editDonorDonationCount').value) || 0;
+        member.last_donation_date = dbEditDate;
+        member.donation_count = parseInt(document.getElementById('editDonorDonationCount').value) || 0;
 
         showCustomPopup("⏳", "রক্তদাতার তথ্য আপডেট হচ্ছে...", false);
         try {
@@ -1710,8 +1722,8 @@ member.donation_count = parseInt(document.getElementById('editDonorDonationCount
 function deleteBloodDonor(memberId) {
     const member = membersData.find(m => m.id === memberId);
     if (!member) return;
-    
-    showConfirmModal("আপনি কি নিশ্চিত যে এই রক্তদাতার তথ্য মুছে ফেলতে চান?", function() {
+
+    showConfirmModal("আপনি কি নিশ্চিত যে এই রক্তদাতার তথ্য মুছে ফেলতে চান?", function () {
         executeDeleteBloodDonor(memberId);
     });
 }
@@ -1761,12 +1773,12 @@ function filterBlood(group, element) {
 function searchBloodDonor() {
     let input = document.getElementById('bloodSearchInput').value.toLowerCase().trim();
     let cards = document.querySelectorAll('#bloodDonorGrid .donor-card');
-    
+
     cards.forEach(card => {
         let name = card.getAttribute('data-name') || '';
         let blood = card.getAttribute('data-blood') || '';
         let address = card.getAttribute('data-address') || '';
-        
+
         if (name.includes(input) || blood.includes(input) || address.includes(input)) {
             card.style.display = "flex";
         } else {
@@ -1795,19 +1807,19 @@ async function saveBloodDonor(event) {
     const blood = document.getElementById('donorBloodGroup').value;
     const phone = document.getElementById('donorPhone').value.trim();
 
-// টাইপ করা তারিখটিকে ডাটাবেজের জন্য YYYY-MM-DD ফরম্যাটে কনভার্ট করা
-const rawLastDonationDate = document.getElementById('donorLastDonationDate').value.trim();
-let lastDonationDate = null;
-if (rawLastDonationDate) {
-    const parsedDate = parseLocalDate(rawLastDonationDate);
-    if (!parsedDate) {
-        showCustomPopup("⚠️", "সর্বশেষ রক্তদানের তারিখটি সঠিক ফরম্যাটে লিখুন (দিন/মাস/বছর)। যেমন: 10/06/2026", true);
-        return;
+    // টাইপ করা তারিখটিকে ডাটাবেজের জন্য YYYY-MM-DD ফরম্যাটে কনভার্ট করা
+    const rawLastDonationDate = document.getElementById('donorLastDonationDate').value.trim();
+    let lastDonationDate = null;
+    if (rawLastDonationDate) {
+        const parsedDate = parseLocalDate(rawLastDonationDate);
+        if (!parsedDate) {
+            showCustomPopup("⚠️", "সর্বশেষ রক্তদানের তারিখটি সঠিক ফরম্যাটে লিখুন (দিন/মাস/বছর)। যেমন: 10/06/2026", true);
+            return;
+        }
+        lastDonationDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
     }
-    lastDonationDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
-}
 
-const donationCount = parseInt(document.getElementById('donorDonationCount').value) || 0;
+    const donationCount = parseInt(document.getElementById('donorDonationCount').value) || 0;
 
     // ব্লাড ব্যাংকে মোবাইল নম্বর দিয়ে ডুপ্লিকেট এন্ট্রি চেক
     const isDuplicate = membersData.some(m => {
@@ -1824,7 +1836,7 @@ const donationCount = parseInt(document.getElementById('donorDonationCount').val
     const id = 'BD-' + autoIdCounter;
 
     const newDonor = {
-        id: id, name: name, address: address, blood: blood, phone: phone, 
+        id: id, name: name, address: address, blood: blood, phone: phone,
         last_donation_date: lastDonationDate, donation_count: donationCount,
         type: "রক্তদাতা", fixedTarget: 0, lastPaid: 0, lastPaidAmount: 0, lastPaidMonths: [],
         paidMonths: [], totalDue: 0, totalPaidAccumulated: 0, latestReceiptNo: "", receiptSent: false
@@ -1842,22 +1854,22 @@ const donationCount = parseInt(document.getElementById('donorDonationCount').val
         closeBloodDonorModal();
         closeCustomPopup();
         refreshAllData();
-        } catch (err) {
-                console.error("Error saving blood donor:", err);
-                closeCustomPopup();
-                // ডাটাবেজের সুনির্দিষ্ট ত্রুটির বার্তা পপআপে দেখাবে
-                showCustomPopup("❌", "ত্রুটি: " + (err.message || "রক্তদাতা সংরক্ষণ করা সম্ভব হয়নি।"), true);
-            }
+    } catch (err) {
+        console.error("Error saving blood donor:", err);
+        closeCustomPopup();
+        // ডাটাবেজের সুনির্দিষ্ট ত্রুটির বার্তা পপআপে দেখাবে
+        showCustomPopup("❌", "ত্রুটি: " + (err.message || "রক্তদাতা সংরক্ষণ করা সম্ভব হয়নি।"), true);
+    }
 }
 
 function populateReceiptDropdown() {
     const select = document.getElementById('receiptMemberSelect');
     if (!select) return;
     select.innerHTML = '';
-    if(membersData.length === 0) {
-        let option = document.createElement('option'); 
-        option.text = "কোনো সদস্য নেই"; 
-        select.appendChild(option); 
+    if (membersData.length === 0) {
+        let option = document.createElement('option');
+        option.text = "কোনো সদস্য নেই";
+        select.appendChild(option);
         return;
     }
     let defaultOpt = document.createElement('option');
@@ -1866,9 +1878,9 @@ function populateReceiptDropdown() {
     select.appendChild(defaultOpt);
 
     membersData.forEach(m => {
-        let option = document.createElement('option'); 
-        option.value = m.id; 
-        option.text = `${m.id} - ${m.name}`; 
+        let option = document.createElement('option');
+        option.value = m.id;
+        option.text = `${m.id} - ${m.name}`;
         select.appendChild(option);
     });
 }
@@ -1882,7 +1894,7 @@ async function downloadReceipt() {
 
     const element = document.getElementById('printReceiptArea');
     if (!element) return;
-    
+
     let name = 'রশিদ';
     let memberId = '';
     const isMemberVisible = document.getElementById('memberReceiptView').style.display !== 'none';
@@ -1892,12 +1904,12 @@ async function downloadReceipt() {
     } else {
         name = document.getElementById('donRName').innerText.trim() || 'দাতা';
     }
-    
+
     const cleanName = name.replace(/[^a-zA-Z0-9\u0980-\u09FF_]/g, '_').replace(/__+/g, '_');
     const cleanMemberId = memberId.replace(/[^a-zA-Z0-9\u0980-\u09FF_]/g, '_').replace(/__+/g, '_');
 
-    const pdfFileName = (isMemberVisible && cleanMemberId) 
-        ? `${cleanName}_${cleanMemberId}.pdf` 
+    const pdfFileName = (isMemberVisible && cleanMemberId)
+        ? `${cleanName}_${cleanMemberId}.pdf`
         : `${cleanName}.pdf`;
 
     showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...", false);
@@ -1909,32 +1921,32 @@ async function downloadReceipt() {
     try {
         // ব্রাউজারকে স্ক্রল সেট করার জন্য সামান্য সময় দেওয়া হলো
         await new Promise(resolve => setTimeout(resolve, 250));
-        
+
         const opt = {
             margin: [15, 10, 15, 10], // এ৫ পেজে নিখুঁত সেন্টারিং মার্জিন
             filename: pdfFileName,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
+            html2canvas: {
                 scale: 3.0,
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff'
-            }, 
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a5',           
-                orientation: 'portrait' 
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a5',
+                orientation: 'portrait'
             }
         };
-        
+
         const worker = html2pdf().set(opt).from(element);
         await worker.save();
-        
+
         // স্ক্রল আগের পজিশনে ফিরিয়ে আনা হলো
         window.scrollTo(0, currentScrollY);
         closeCustomPopup();
         showCustomPopup("✅", "পিডিএফ ডাউনলোড সম্পন্ন হয়েছে!", true);
-        
+
     } catch (error) {
         console.error("PDF download error:", error);
         window.scrollTo(0, currentScrollY);
@@ -1967,8 +1979,8 @@ async function shareReceipt() {
     const cleanMemberId = memberId.replace(/[^a-zA-Z0-9_]/g, '_').replace(/__+/g, '_');
     const receiptNo = document.getElementById('rNo').innerText || 'AF-REC';
 
-    const pdfFileName = (isMemberVisible && cleanMemberId) 
-        ? `${cleanName}_${cleanMemberId}.pdf` 
+    const pdfFileName = (isMemberVisible && cleanMemberId)
+        ? `${cleanName}_${cleanMemberId}.pdf`
         : `${cleanName}.pdf`;
 
     showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে...", false);
@@ -1979,31 +1991,31 @@ async function shareReceipt() {
 
     try {
         await new Promise(resolve => setTimeout(resolve, 250));
-        
+
         const opt = {
             margin: [15, 10, 15, 10], // এ৫ পেজে নিখুঁত সেন্টারিং মার্জিন
             filename: pdfFileName,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
+            html2canvas: {
                 scale: 3.0,
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff'
-            }, 
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a5',           
-                orientation: 'portrait' 
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a5',
+                orientation: 'portrait'
             }
         };
-        
+
         if (navigator.share) {
             const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
             const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
-            
+
             window.scrollTo(0, currentScrollY);
             closeCustomPopup();
-            
+
             await navigator.share({
                 files: [file],
                 title: `${name} এর রশিদ`,
@@ -2080,7 +2092,7 @@ async function verifyExecPassword() {
         showCustomPopup("⚠️", "দয়া করে পাসওয়ার্ড লিখুন।", true);
         return;
     }
-    
+
     showCustomPopup("⏳", "পাসওয়ার্ড যাচাই করা হচ্ছে...", false);
     try {
         const { data, error } = await supabaseClient
@@ -2088,9 +2100,9 @@ async function verifyExecPassword() {
             .select('password')
             .eq('id', 'config')
             .single();
-            
+
         if (error) throw error;
-        
+
         if (data && data.password === enteredPassword) {
             closeCustomPopup();
             sessionStorage.setItem('exec_authenticated', 'true');
@@ -2111,7 +2123,7 @@ async function sendResetCode() {
         showCustomPopup("⚠️", "দয়া করে জিমেইল এড্রেস লিখুন।", true);
         return;
     }
-    
+
     showCustomPopup("⏳", "জিমেইল যাচাই করা হচ্ছে...", false);
     try {
         const { data, error } = await supabaseClient
@@ -2119,18 +2131,18 @@ async function sendResetCode() {
             .select('reset_email')
             .eq('id', 'config')
             .single();
-            
+
         if (error) throw error;
-        
+
         if (!data || data.reset_email.toLowerCase() !== enteredEmail) {
             closeCustomPopup();
             showCustomPopup("❌", "ভুল জিমেইল! এই জিমেইলটি পাসওয়ার্ড রিসেট করার জন্য অনুমোদিত নয়।", true);
             return;
         }
-        
+
         const code = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); 
-        
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
         const { error: updateError } = await supabaseClient
             .from('admin_settings')
             .update({
@@ -2138,27 +2150,27 @@ async function sendResetCode() {
                 code_expires_at: expiresAt
             })
             .eq('id', 'config');
-            
+
         if (updateError) throw updateError;
-        
+
         showCustomPopup("⏳", "ভেরিফিকেশন কোড পাঠানো হচ্ছে...", false);
-        
+
         const templateParams = {
             to_email: enteredEmail,
             reset_code: code,
             to_name: "Ababil Admin"
         };
-        
+
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-            .then(function(response) {
+            .then(function (response) {
                 closeCustomPopup();
                 showCustomPopup("📧", "আপনার জিমেইল এড্রেসে একটি ৬-ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে।", true);
                 showVerifyCodeView();
-            }, function(err) {
+            }, function (err) {
                 closeCustomPopup();
                 showCustomPopup("❌", "কোড পাঠানো সম্ভব হয়নি।", true);
             });
-            
+
     } catch (err) {
         closeCustomPopup();
         showCustomPopup("❌", "ত্রুটি: জিমেইল এড্রেস যাচাই করা যায়নি।", true);
@@ -2171,7 +2183,7 @@ async function verifyResetCode() {
         showCustomPopup("⚠️", "দয়া করে ভেরিফিকেশন কোড লিখুন।", true);
         return;
     }
-    
+
     showCustomPopup("⏳", "কোড যাচাই করা হচ্ছে...", false);
     try {
         const { data, error } = await supabaseClient
@@ -2179,26 +2191,26 @@ async function verifyResetCode() {
             .select('reset_code, code_expires_at')
             .eq('id', 'config')
             .single();
-            
+
         if (error) throw error;
-        
+
         if (!data || data.reset_code !== enteredCode) {
             closeCustomPopup();
             showCustomPopup("❌", "ভুল ভেরিফিকেশন কোড! পুনরায় চেষ্টা করুন।", true);
             return;
         }
-        
+
         const expiresAt = new Date(data.code_expires_at);
         if (expiresAt < new Date()) {
             closeCustomPopup();
             showCustomPopup("⚠️", "ভেরিফিকেশন কোডের মেয়াদ শেষ হয়ে গেছে।", true);
             return;
         }
-        
+
         closeCustomPopup();
         showCustomPopup("✅", "কোড সফলভাবে যাচাই করা হয়েছে!", true);
         showNewPasswordView();
-        
+
     } catch (err) {
         closeCustomPopup();
         showCustomPopup("❌", "ত্রুটি: ভেরিফিকেশন কোড যাচাই করা সম্ভব হয়নি।", true);
@@ -2208,34 +2220,34 @@ async function verifyResetCode() {
 async function updateNewPassword() {
     const newPassword = document.getElementById('newPasswordInput').value.trim();
     const confirmNewPassword = document.getElementById('confirmNewPasswordInput').value.trim();
-    
+
     if (!newPassword || !confirmNewPassword) {
         showCustomPopup("⚠️", "দয়া করে পাসওয়ার্ড লিখুন।", true);
         return;
     }
-    
+
     if (newPassword !== confirmNewPassword) {
         showCustomPopup("⚠️", "উভয় পাসওয়ার্ড হুবহু একই হতে হবে।", true);
         return;
     }
-    
+
     showCustomPopup("⏳", "পাসওয়ার্ড আপডেট করা হচ্ছে...", false);
     try {
         const { error } = await supabaseClient
             .from('admin_settings')
             .update({
                 password: newPassword,
-                reset_code: null, 
+                reset_code: null,
                 code_expires_at: null
             })
             .eq('id', 'config');
-            
+
         if (error) throw error;
-        
+
         closeCustomPopup();
         showCustomPopup("✅", "পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে!", true);
         showPasswordEntryView();
-        
+
     } catch (err) {
         closeCustomPopup();
         showCustomPopup("❌", "ত্রুটি: পাসওয়ার্ড আপডেট করা সম্ভব হয়নি।", true);
@@ -2247,7 +2259,7 @@ async function updateNewPassword() {
 // ==================================================
 function renderExpenseTable() {
     // ব্যয়ের টেবিল রেন্ডার করার পূর্বে সাজানো নিশ্চিত করা
-    sortAllDataDescending(); 
+    sortAllDataDescending();
 
     const publicTbody = document.getElementById('expenseTableBody');
     let publicHtml = '';
@@ -2269,7 +2281,7 @@ function renderExpenseTable() {
         });
     }
     if (publicTbody) publicTbody.innerHTML = publicHtml;
-    
+
     const totalExpEl = document.getElementById('totalExpenseAmount');
     if (totalExpEl) totalExpEl.innerText = totalExpense.toLocaleString('bn-BD') + '/-';
 
@@ -2311,14 +2323,14 @@ function editExpenseEntry(index) {
     if (entry) {
         const voucherNoVal = entry.voucherno || "";
         const approvedByVal = entry.approvedby || "";
-        
+
         document.getElementById('editExpVoucherNo').value = voucherNoVal;
         document.getElementById('editExpSector').value = entry.sector;
         document.getElementById('editExpApprovedBy').value = approvedByVal;
         document.getElementById('editExpAmount').value = entry.amount;
-        document.getElementById('editExpProject').value = entry.project || ""; 
-        
-        let rawDate = entry.date; 
+        document.getElementById('editExpProject').value = entry.project || "";
+
+        let rawDate = entry.date;
         let formattedDate = "";
         if (rawDate) {
             let parts = rawDate.split('/');
@@ -2327,7 +2339,7 @@ function editExpenseEntry(index) {
             }
         }
         document.getElementById('editExpDate').value = formattedDate;
-        
+
         document.getElementById('editExpenseModal').style.display = 'flex';
     }
 }
@@ -2346,14 +2358,14 @@ function closeEditExpenseModalOutside(event) {
 async function saveEditedExpenseEntry(event) {
     event.preventDefault();
     if (selectedExpenseIndex === null) return;
-    
+
     const voucherNo = document.getElementById('editExpVoucherNo').value;
-    const rawDate = document.getElementById('editExpDate').value; 
+    const rawDate = document.getElementById('editExpDate').value;
     const sector = document.getElementById('editExpSector').value;
     const approvedBy = document.getElementById('editExpApprovedBy').value;
     const amount = parseInt(document.getElementById('editExpAmount').value) || 0;
-    const project = document.getElementById('editExpProject').value; 
-    
+    const project = document.getElementById('editExpProject').value;
+
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
 
@@ -2362,25 +2374,25 @@ async function saveEditedExpenseEntry(event) {
         const { error } = await supabaseClient
             .from('expenses')
             .update({
-                date: dateStr, 
+                date: dateStr,
                 sector: sector,
-                approvedby: approvedBy, 
+                approvedby: approvedBy,
                 amount: amount,
-                project: project 
+                project: project
             })
             .eq('voucherno', voucherNo);
-            
+
         if (error) throw error;
 
         expenseEntries[selectedExpenseIndex].date = dateStr;
         expenseEntries[selectedExpenseIndex].sector = sector;
         expenseEntries[selectedExpenseIndex].approvedby = approvedBy;
         expenseEntries[selectedExpenseIndex].amount = amount;
-        expenseEntries[selectedExpenseIndex].project = project; 
+        expenseEntries[selectedExpenseIndex].project = project;
 
         closeEditExpenseModal();
         closeCustomPopup();
-        
+
         showCustomPopup("✅", "ব্যয়ের রেকর্ড সফলভাবে আপডেট করা হয়েছে।", true);
         renderExpenseTable();
     } catch (err) {
@@ -2392,10 +2404,10 @@ async function saveEditedExpenseEntry(event) {
 function openExpenseModal() {
     document.getElementById('expenseModal').style.display = 'flex';
     document.getElementById('expVoucherNo').value = 'AF-EXP-' + globalExpenseCounter;
-    
+
     const today = new Date();
     const yyyy = today.getFullYear();
-    let mm = today.getMonth() + 1; 
+    let mm = today.getMonth() + 1;
     let dd = today.getDate();
     if (dd < 10) dd = '0' + dd;
     if (mm < 10) mm = '0' + mm;
@@ -2414,22 +2426,22 @@ function closeExpenseModalOutside(event) {
 async function saveExpenseEntry(event) {
     event.preventDefault();
     const voucherNo = document.getElementById('expVoucherNo').value;
-    const rawDate = document.getElementById('expDate').value; 
+    const rawDate = document.getElementById('expDate').value;
     const sector = document.getElementById('expSector').value;
     const approvedBy = document.getElementById('expApprovedBy').value;
     const amount = parseInt(document.getElementById('expAmount').value) || 0;
-    const project = document.getElementById('expProject').value; 
-    
+    const project = document.getElementById('expProject').value;
+
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
 
     const entry = {
-        voucherno: voucherNo, 
-        date: dateStr, 
+        voucherno: voucherNo,
+        date: dateStr,
         sector: sector,
-        approvedby: approvedBy, 
+        approvedby: approvedBy,
         amount: amount,
-        project: project 
+        project: project
     };
 
     showCustomPopup("⏳", "ব্যয় এন্ট্রি ক্লাউডে সংরক্ষিত হচ্ছে...", false);
@@ -2440,11 +2452,11 @@ async function saveExpenseEntry(event) {
         if (error) throw error;
 
         expenseEntries.push(entry);
-        globalExpenseCounter++; 
+        globalExpenseCounter++;
 
         closeExpenseModal();
         closeCustomPopup();
-        
+
         showCustomPopup("✅", "ব্যয়ের রেকর্ড সফলভাবে এন্ট্রি হয়েছে।", true);
         renderExpenseTable();
     } catch (err) {
@@ -2457,7 +2469,7 @@ async function deleteExpenseEntry(index) {
     const entry = expenseEntries[index];
     const voucherNo = entry.voucherno;
 
-    showConfirmModal(`আপনি কি নিশ্চিত যে এই ব্যয়ের রেকর্ডটি (${voucherNo}) মুছে ফেলতে চান?`, async function() {
+    showConfirmModal(`আপনি কি নিশ্চিত যে এই ব্যয়ের রেকর্ডটি (${voucherNo}) মুছে ফেলতে চান?`, async function () {
         showCustomPopup("⏳", "ডাটাবেজ থেকে তথ্য ডিলিট হচ্ছে...", false);
         try {
             const { error } = await supabaseClient
@@ -2503,7 +2515,7 @@ function editDonationEntry(index) {
     setSafeValue('editDonPhone', entry.phone || '');
     setSafeValue('editDonAmount', entry.amount || '');
     setSafeValue('editDonSector', entry.sector || '');
-    setSafeValue('editDonProject', entry.project || ''); 
+    setSafeValue('editDonProject', entry.project || '');
 
     let formattedDate = "";
     if (entry.date) {
@@ -2539,7 +2551,7 @@ async function saveEditedDonationEntry(event) {
     const phone = document.getElementById('editDonPhone').value;
     const amount = parseInt(document.getElementById('editDonAmount').value) || 0;
     const sector = document.getElementById('editDonSector').value;
-    const project = document.getElementById('editDonProject').value; 
+    const project = document.getElementById('editDonProject').value;
 
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
@@ -2555,7 +2567,7 @@ async function saveEditedDonationEntry(event) {
                 phone: phone,
                 amount: amount,
                 sector: sector,
-                project: project 
+                project: project
             })
             .eq('receiptNo', receiptNo);
 
@@ -2567,13 +2579,13 @@ async function saveEditedDonationEntry(event) {
         donationEntries[selectedDonationIndex].phone = phone;
         donationEntries[selectedDonationIndex].amount = amount;
         donationEntries[selectedDonationIndex].sector = sector;
-        donationEntries[selectedDonationIndex].project = project; 
+        donationEntries[selectedDonationIndex].project = project;
 
         closeEditDonationModal();
         closeCustomPopup();
 
         showCustomPopup("✅", "আয়ের রেকর্ড সফলভাবে সংশোধন করা হয়েছে।", true);
-        refreshAllData(); 
+        refreshAllData();
     } catch (err) {
         closeCustomPopup();
         showCustomPopup("❌", "ত্রুটি: আয়ের রেকর্ড সংশোধন করা সম্ভব হয়নি।", true);
@@ -2592,15 +2604,15 @@ window.handleDirectRegistration = handleDirectRegistration;
 function generateReceipt() {
     const select = document.getElementById('receiptMemberSelect');
     if (!select) return;
-    
+
     const memberId = select.value;
     const memberView = document.getElementById('memberReceiptView');
     const donationView = document.getElementById('donationReceiptView');
-    
+
     if (!memberId) {
         if (memberView) memberView.style.display = 'block';
         if (donationView) donationView.style.display = 'none';
-        
+
         document.getElementById('rNo').innerText = '--';
         document.getElementById('rDate').innerText = '--';
         document.getElementById('rId').innerText = '--';
@@ -2611,28 +2623,28 @@ function generateReceipt() {
         document.getElementById('rDue').innerText = '--';
         return;
     }
-    
+
     const member = membersData.find(m => m.id === memberId);
     if (member) {
         if (memberView) memberView.style.display = 'block';
         if (donationView) donationView.style.display = 'none';
-        
+
         document.getElementById('rNo').innerText = member.latestReceiptNo || 'AF-REC-1000';
-        
+
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
-        const mm = String(today.getMonth() + 1).padStart(2, '0'); 
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
         const yyyy = today.getFullYear();
         const formattedDate = dd + '/' + mm + '/' + yyyy;
-        
+
         document.getElementById('rDate').innerText = formattedDate;
         document.getElementById('rId').innerText = member.id;
         document.getElementById('rName').innerText = member.name;
-        
+
         const targetDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") ? member.type : member.fixedTarget + '/-';
         document.getElementById('rTarget').innerText = targetDisplay;
         document.getElementById('rAmount').innerText = (member.lastPaid || 0) + '/-';
-        
+
         let monthsDisplay = '--';
         if (Array.isArray(member.lastPaidMonths) && member.lastPaidMonths.length > 0) {
             monthsDisplay = member.lastPaidMonths.join(', ');
@@ -2644,12 +2656,12 @@ function generateReceipt() {
                 } else {
                     monthsDisplay = member.lastPaidMonths;
                 }
-            } catch(e) {
+            } catch (e) {
                 monthsDisplay = member.lastPaidMonths;
             }
         }
         document.getElementById('rMonths').innerText = monthsDisplay;
-        
+
         const dueDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") ? '০/-' : (member.totalDue || 0) + '/-';
         document.getElementById('rDue').innerText = dueDisplay;
     }
@@ -2662,10 +2674,10 @@ function generateReceipt() {
 function openGeneralIncomeModal() {
     document.getElementById('generalIncomeModal').style.display = 'flex';
     document.getElementById('genReceiptNo').value = 'AF-REC-' + globalReceiptCounter;
-    
+
     const today = new Date();
     const yyyy = today.getFullYear();
-    let mm = today.getMonth() + 1; 
+    let mm = today.getMonth() + 1;
     let dd = today.getDate();
     if (dd < 10) dd = '0' + dd;
     if (mm < 10) mm = '0' + mm;
@@ -2684,23 +2696,23 @@ function closeGeneralIncomeModalOutside(event) {
 async function saveGeneralIncomeEntry(event) {
     event.preventDefault();
     const receiptNo = document.getElementById('genReceiptNo').value;
-    const rawDate = document.getElementById('genDate').value; 
+    const rawDate = document.getElementById('genDate').value;
     const sourceDesc = document.getElementById('genSourceDesc').value;
     const amount = parseInt(document.getElementById('genAmount').value) || 0;
-    const project = document.getElementById('genProject').value; 
-    
+    const project = document.getElementById('genProject').value;
+
     let dateParts = rawDate.split('-');
     let dateStr = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
 
     const entry = {
-        receiptNo: receiptNo, 
-        date: dateStr, 
-        name: sourceDesc, 
+        receiptNo: receiptNo,
+        date: dateStr,
+        name: sourceDesc,
         address: "সাধারণ তহবিল",
-        phone: "---", 
-        amount: amount, 
+        phone: "---",
+        amount: amount,
         sector: "সাধারণ আয়ের এন্ট্রি",
-        project: project 
+        project: project
     };
 
     showCustomPopup("⏳", "সাধারণ আয়ের এন্ট্রি ডাটাবেজে সংরক্ষিত হচ্ছে...", false);
@@ -2710,16 +2722,16 @@ async function saveGeneralIncomeEntry(event) {
             .insert([entry]);
         if (error) throw error;
 
-        donationReceiptsStatus[receiptNo] = false; 
+        donationReceiptsStatus[receiptNo] = false;
         localStorage.setItem('ababil_donation_receipt_status', JSON.stringify(donationReceiptsStatus));
-        
-        globalReceiptCounter++; 
 
-        await loadAllDataFromSupabase(); 
+        globalReceiptCounter++;
+
+        await loadAllDataFromSupabase();
 
         closeGeneralIncomeModal();
         closeCustomPopup();
-        
+
         showCustomPopup("✅", "সাধারণ আয়ের রেকর্ড সফলভাবে এন্ট্রি হয়েছে।", true);
     } catch (err) {
         closeCustomPopup();
@@ -2740,7 +2752,7 @@ function switchIncomeSubTab(tab) {
     const donationView = document.getElementById('donationIncomeSubView');
     const btnGeneral = document.getElementById('btnSubTabGeneral');
     const btnDonation = document.getElementById('btnSubTabDonation');
-    
+
     if (tab === 'general') {
         generalView.style.display = 'block';
         donationView.style.display = 'none';
@@ -2761,20 +2773,20 @@ window.switchIncomeSubTab = switchIncomeSubTab;
 // ==================================================
 function renderDonationTable() {
     const tbody = document.getElementById('donationTableBody');
-    if(!tbody) return;
-    
+    if (!tbody) return;
+
     const donationsOnly = donationEntries.filter(e => e.sector !== "সাধারণ আয়ের এন্ট্রি");
-    
-    if(donationsOnly.length === 0) {
+
+    if (donationsOnly.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); font-style:italic;">বর্তমানে কোনো আয়ের খাতের তথ্য যুক্ত করা হয়নি।</td></tr>`;
         return;
     }
     let html = '';
     donationsOnly.forEach((entry) => {
-        let mainIndex = donationEntries.indexOf(entry); 
+        let mainIndex = donationEntries.indexOf(entry);
         let isGenerated = donationReceiptsStatus[entry.receiptNo];
-        let receiptCell = isGenerated ? 
-            `<span class="receipt-status-sent" onclick="showDirectDonationReceipt('${entry.receiptNo}')">রশিদ পাঠানো হয়েছে</span>` : 
+        let receiptCell = isGenerated ?
+            `<span class="receipt-status-sent" onclick="showDirectDonationReceipt('${entry.receiptNo}')">রশিদ পাঠানো হয়েছে</span>` :
             `<span class="receipt-status-send" onclick="generateDonationReceiptAction('${entry.receiptNo}')">রশিদ পাঠান</span>`;
 
         html += `<tr style="border-bottom: 1.5px solid var(--border);">
@@ -2815,17 +2827,17 @@ function renderDonationTable() {
 // ==================================================
 function renderGeneralIncomeTable() {
     const tbody = document.getElementById('generalIncomeTableBody');
-    if(!tbody) return;
-    
+    if (!tbody) return;
+
     const generalOnly = donationEntries.filter(e => e.sector === "সাধারণ আয়ের এন্ট্রি");
-    
-    if(generalOnly.length === 0) {
+
+    if (generalOnly.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted); font-style:italic;">বর্তমানে কোনো সাধারণ আয়ের খাতের তথ্য যুক্ত করা হয়নি।</td></tr>`;
         return;
     }
     let html = '';
     generalOnly.forEach((entry) => {
-        let mainIndex = donationEntries.indexOf(entry); 
+        let mainIndex = donationEntries.indexOf(entry);
         html += `<tr style="border-bottom: 1.5px solid var(--border);">
             <td data-label="রশিদ নং"><span style="color:var(--primary); font-weight:bold;">${entry.receiptNo}</span></td>
             <td data-label="খাত বিবরণী"><strong>${entry.name}</strong></td>
@@ -2906,16 +2918,16 @@ function liveSearchMemberDetails() {
     let input = document.getElementById('memberDetailsSearchInput').value.toLowerCase().trim();
     let tbody = document.getElementById('memberDetailsTableBody');
     let rows = tbody.getElementsByTagName('tr');
-    
+
     for (let i = 0; i < rows.length; i += 2) {
         let mainRow = rows[i];
-        let detailRow = rows[i+1];
+        let detailRow = rows[i + 1];
         if (!mainRow || !detailRow) continue;
-        
+
         let idText = (mainRow.cells[0]?.textContent || "").toLowerCase();
         let nameText = (mainRow.cells[1]?.textContent || "").toLowerCase();
         let detailText = (detailRow.textContent || "").toLowerCase();
-        
+
         if (idText.includes(input) || nameText.includes(input) || detailText.includes(input)) {
             mainRow.style.display = "";
             let icon = document.getElementById('toggle-icon-' + idText.trim().toUpperCase());
@@ -2932,16 +2944,16 @@ function liveSearchGeneralIncome() {
     let input = document.getElementById('generalIncomeSearchInput').value.toLowerCase().trim();
     let tbody = document.getElementById('generalIncomeTableBody');
     let rows = tbody.getElementsByTagName('tr');
-    
+
     for (let i = 0; i < rows.length; i += 2) {
         let mainRow = rows[i];
-        let detailRow = rows[i+1];
+        let detailRow = rows[i + 1];
         if (!mainRow || !detailRow) continue;
-        
+
         let receiptText = (mainRow.cells[0]?.textContent || "").toLowerCase();
         let descText = (mainRow.cells[1]?.textContent || "").toLowerCase();
         let detailText = (detailRow.textContent || "").toLowerCase();
-        
+
         if (receiptText.includes(input) || descText.includes(input) || detailText.includes(input)) {
             mainRow.style.display = "";
             let toggleIcon = mainRow.querySelector('[id^="toggle-general-icon-"]');
@@ -2958,16 +2970,16 @@ function liveSearchDonationIncome() {
     let input = document.getElementById('donationIncomeSearchInput').value.toLowerCase().trim();
     let tbody = document.getElementById('donationTableBody');
     let rows = tbody.getElementsByTagName('tr');
-    
+
     for (let i = 0; i < rows.length; i += 2) {
         let mainRow = rows[i];
-        let detailRow = rows[i+1];
+        let detailRow = rows[i + 1];
         if (!mainRow || !detailRow) continue;
-        
+
         let receiptText = (mainRow.cells[0]?.textContent || "").toLowerCase();
         let nameText = (mainRow.cells[1]?.textContent || "").toLowerCase();
         let detailText = (detailRow.textContent || "").toLowerCase();
-        
+
         if (receiptText.includes(input) || nameText.includes(input) || detailText.includes(input)) {
             mainRow.style.display = "";
             let toggleIcon = mainRow.querySelector('[id^="toggle-donation-icon-"]');
@@ -2984,13 +2996,13 @@ function liveSearchExpenseEntry() {
     let input = document.getElementById('expenseEntrySearchInput').value.toLowerCase().trim();
     let tbody = document.getElementById('executiveExpenseTableBody');
     let rows = tbody.getElementsByTagName('tr');
-    
+
     for (let i = 0; i < rows.length; i++) {
         let row = rows[i];
         let voucherText = (row.cells[0]?.textContent || "").toLowerCase();
         let sectorText = (row.cells[2]?.textContent || "").toLowerCase();
         let approvedText = (row.cells[3]?.textContent || "").toLowerCase();
-        
+
         if (voucherText.includes(input) || sectorText.includes(input) || approvedText.includes(input)) {
             row.style.display = "";
         } else {
@@ -3009,9 +3021,9 @@ function triggerHomeAnimations() {
     if (!reveals.length) return;
 
     const observerOptions = {
-        root: null, 
-        rootMargin: '0px 0px -40px 0px', 
-        threshold: 0.1 
+        root: null,
+        rootMargin: '0px 0px -40px 0px',
+        threshold: 0.1
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -3034,25 +3046,25 @@ window.triggerHomeAnimations = triggerHomeAnimations;
 // ১. প্রজেক্ট রিপোর্ট উইন্ডোর ড্রপডাউনে ইউনিক প্রজেক্ট লোড করা
 function populateProjectReportDropdown() {
     const select = document.getElementById('reportProjectSelect');
-    if(!select) return;
-    
+    if (!select) return;
+
     select.innerHTML = '';
-    
+
     // ডাটাবেজের অনুদান খাত থেকে সকল ইউনিক প্রজেক্ট খুঁজে নেওয়া হচ্ছে
     const projects = [...new Set(donationEntries.map(e => e.project).filter(p => p && p.trim() !== ''))];
-    
+
     if (projects.length === 0) {
         let opt = document.createElement('option');
         opt.text = "কোনো সচল প্রজেক্ট পাওয়া যায়নি";
         select.appendChild(opt);
         return;
     }
-    
+
     let defaultOpt = document.createElement('option');
     defaultOpt.value = "";
     defaultOpt.text = "--- একটি প্রজেক্ট নির্বাচন করুন ---";
     select.appendChild(defaultOpt);
-    
+
     projects.forEach(p => {
         let opt = document.createElement('option');
         opt.value = p;
@@ -3065,7 +3077,7 @@ function populateProjectReportDropdown() {
 function adjustExcelReportFontSize() {
     const reportArea = document.getElementById('excelReportArea');
     if (!reportArea) return;
-    
+
     // প্রথমে বেসলাইন ফন্ট সাইজে রিসেট করে নেওয়া হচ্ছে
     reportArea.style.fontSize = '';
     const tables = reportArea.querySelectorAll('.excel-grid-table');
@@ -3073,11 +3085,11 @@ function adjustExcelReportFontSize() {
         const cells = t.querySelectorAll('th, td');
         cells.forEach(c => c.style.fontSize = '');
     });
-    
+
     // এ৪ পোর্ট্রেটের স্ট্যান্ডার্ড প্রিন্ট হাইট লিমিট হচ্ছে ১০২০ পিক্সেল
     const targetMaxHeight = 1020;
     let currentHeight = reportArea.scrollHeight;
-    
+
     // যদি প্রজেক্টের আয়ের রো বেশি হয়ে ১ পৃষ্ঠা ছাড়িয়ে যায়, তবে সাইজ ধীরে ধীরে ছোট করবে
     if (currentHeight > targetMaxHeight) {
         let scaleFactor = 11; // ডিফল্ট বেসলাইন সাইজ
@@ -3097,17 +3109,17 @@ function adjustExcelReportFontSize() {
 function generateProjectExcelReport() {
     const input = document.getElementById('reportProjectInput');
     if (!input) return;
-    
+
     const selectedProject = input.value.trim();
-    
+
     // প্রতিবেদন তৈরির বর্তমান লাইভ তারিখ (যেমন: 06/06/2026)
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, '0');
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const yyyy = today.getFullYear();
     document.getElementById('excelReportDate').innerText = `${dd}/${mm}/${yyyy}`;
-    
-    if(!selectedProject) {
+
+    if (!selectedProject) {
         document.getElementById('excelProjectHeaderTitle').innerText = "--- হিসাব বিবরণী";
         document.getElementById('excelIncomeReportBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px;">অনুগ্রহ করে প্রজেক্টের নাম টাইপ করুন</td></tr>`;
         document.getElementById('excelExpenseReportBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px;">অনুগ্রহ করে প্রজেক্টের নাম টাইপ করুন</td></tr>`;
@@ -3118,15 +3130,15 @@ function generateProjectExcelReport() {
         document.getElementById('excelCardBalance').innerText = "০/-";
         return;
     }
-    
+
     // প্রজেক্টের নাম ও হিসাব বিবরণী একীভূত করে ডানে শো করা
     document.getElementById('excelProjectHeaderTitle').innerText = selectedProject + " হিসাব বিবরণী";
-    
+
     // (ক) আয়ের ডেটা ফিল্টার (টাইপ করার সাথে সাথে লাইভ সার্চ হবে, Case-Insensitive)
     const filteredIncomes = donationEntries.filter(e => e.project && e.project.trim().toLowerCase().includes(selectedProject.toLowerCase()));
     let incomeHtml = '';
     let totalIncome = 0;
-    
+
     if (filteredIncomes.length === 0) {
         incomeHtml = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px;">এই প্রজেক্টে কোনো আয়ের রেকর্ড পাওয়া যায়নি</td></tr>`;
     } else {
@@ -3142,12 +3154,12 @@ function generateProjectExcelReport() {
     }
     document.getElementById('excelIncomeReportBody').innerHTML = incomeHtml;
     document.getElementById('excelTotalIncomeAmount').innerText = totalIncome.toLocaleString('bn-BD') + '/-';
-    
+
     // (খ) ব্যয়ের ডেটা ফিল্টার (টাইপ করার সাথে সাথে লাইভ সার্চ হবে, Case-Insensitive)
     const filteredExpenses = expenseEntries.filter(e => e.project && e.project.trim().toLowerCase().includes(selectedProject.toLowerCase()));
     let expenseHtml = '';
     let totalExpense = 0;
-    
+
     if (filteredExpenses.length === 0) {
         expenseHtml = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px;">এই প্রজেক্টে কোনো ব্যয়ের রেকর্ড পাওয়া যায়নি</td></tr>`;
     } else {
@@ -3163,10 +3175,10 @@ function generateProjectExcelReport() {
     }
     document.getElementById('excelExpenseReportBody').innerHTML = expenseHtml;
     document.getElementById('excelTotalExpenseAmount').innerText = totalExpense.toLocaleString('bn-BD') + '/-';
-    
+
     // (গ) ৩টি কার্ডের অটো জেনারেটেড ডাটা ও অবশিষ্ট তহবিল হিসাব
     const balance = totalIncome - totalExpense;
-    
+
     document.getElementById('excelCardIncome').innerText = totalIncome.toLocaleString('bn-BD') + '/-';
     document.getElementById('excelCardExpense').innerText = totalExpense.toLocaleString('bn-BD') + '/-';
     document.getElementById('excelCardBalance').innerText = balance.toLocaleString('bn-BD') + '/-';
@@ -3180,15 +3192,15 @@ async function downloadProjectExcelPDF() {
     const input = document.getElementById('reportProjectInput');
     if (!input) return;
     const selectedProject = input.value.trim();
-    
-    if(!selectedProject) {
+
+    if (!selectedProject) {
         showCustomPopup("⚠️", "অনুগ্রহ করে ডাউনলোডের পূর্বে একটি প্রজেক্ট সিলেক্ট করুন।", true);
         return;
     }
 
     const prepName = document.getElementById('excelPreparerName').value.trim();
     const prepDesg = document.getElementById('excelPreparerDesignation').value.trim();
-    
+
     if (!prepName || !prepDesg) {
         showCustomPopup("⚠️", "অনুগ্রহ করে প্রস্তুতকারীর নাম এবং পদবী পূরণ করুন।", true);
         return;
@@ -3196,7 +3208,7 @@ async function downloadProjectExcelPDF() {
 
     const element = document.getElementById('excelReportArea');
     if (!element) return;
-    
+
     const cleanProjectName = selectedProject.replace(/[^a-zA-Z0-9\u0980-\u09FF_]/g, '_').replace(/__+/g, '_');
     const pdfFileName = `Project_Report_${cleanProjectName}.pdf`;
 
@@ -3204,33 +3216,33 @@ async function downloadProjectExcelPDF() {
 
     try {
         await new Promise(resolve => setTimeout(resolve, 300));
-        
+
         const currentScrollY = window.scrollY;
         window.scrollTo(0, 0);
-        
+
         const opt = {
-            margin: [10, 10, 10, 10],   
+            margin: [10, 10, 10, 10],
             filename: pdfFileName,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
+            html2canvas: {
                 scale: 3.0,
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff'
-            }, 
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a4',           
-                orientation: 'portrait' 
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'portrait'
             }
         };
-        
+
         await html2pdf().set(opt).from(element).save();
-        
+
         window.scrollTo(0, currentScrollY);
         closeCustomPopup();
         showCustomPopup("✅", "পিডিএফ ডাউনলোড সম্পন্ন হয়েছে!", true);
-        
+
     } catch (error) {
         console.error("Project report PDF error:", error);
         window.scrollTo(0, currentScrollY);
@@ -3244,14 +3256,14 @@ function exportProjectToCSV() {
     const input = document.getElementById('reportProjectInput');
     if (!input) return;
     const selectedProject = input.value.trim();
-    
-    if(!selectedProject) {
+
+    if (!selectedProject) {
         showCustomPopup("⚠️", "অনুগ্রহ করে একটি প্রজেক্ট সিলেক্ট করুন।", true);
         return;
     }
-    
+
     const filteredIncomes = donationEntries.filter(e => e.project && e.project.trim().toLowerCase().includes(selectedProject.toLowerCase()));
-    if(filteredIncomes.length === 0) {
+    if (filteredIncomes.length === 0) {
         showCustomPopup("⚠️", "এই প্রজেক্টের আন্ডারে কোনো ডাটা নেই।", true);
         return;
     }
@@ -3263,7 +3275,7 @@ function exportProjectToCSV() {
     csvContent += `প্রজেক্ট: ${selectedProject}\n`;
     csvContent += `রিপোর্ট তৈরির তারিখ: ${document.getElementById('excelReportDate').innerText}\n\n`;
     csvContent += "ক্রমিক নং,দাতার নাম,ঠিকানা,দানের পরিমাণ\n";
-    
+
     let total = 0;
     filteredIncomes.forEach((d, idx) => {
         total += d.amount;
@@ -3271,9 +3283,9 @@ function exportProjectToCSV() {
         const address = d.address ? `"${d.address.replace(/"/g, '""')}"` : '---';
         csvContent += `${idx + 1},${name},${address},${d.amount}\n`;
     });
-    
+
     csvContent += `,,,सर्वমোট সংগৃহীত: ${total}/-\n`;
-    
+
     const preparer = document.getElementById('excelPreparerName').value.trim() || '---';
     const designation = document.getElementById('excelPreparerDesignation').value.trim() || '---';
     csvContent += `\nপ্রস্তুতকারী: ${preparer},পদবী: ${designation}\n`;
@@ -3281,7 +3293,7 @@ function exportProjectToCSV() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const cleanProjectName = selectedProject.replace(/[^a-zA-Z0-9\u0980-\u09FF_]/g, '_').replace(/__+/g, '_');
-    
+
     link.href = URL.createObjectURL(blob);
     link.setAttribute("download", `Ababil_${cleanProjectName}_Excel.csv`);
     document.body.appendChild(link);
@@ -3296,7 +3308,7 @@ function sortAllDataDescending() {
         membersData.sort((a, b) => {
             let numA = parseInt(a.id.replace(/[^0-9]/g, '')) || 0;
             let numB = parseInt(b.id.replace(/[^0-9]/g, '')) || 0;
-            return numB - numA; 
+            return numB - numA;
         });
     }
 
@@ -3325,13 +3337,13 @@ function sortAllDataDescending() {
 async function updateDonorDonationDateDirect(memberId) {
     const inputEl = document.getElementById(`direct-date-${memberId}`);
     if (!inputEl) return;
-    
+
     const newDate = inputEl.value;
     if (!newDate) {
         showCustomPopup("⚠️", "অনুগ্রহ করে একটি সঠিক তারিখ নির্বাচন করুন।", true);
         return;
     }
-    
+
     const donor = membersData.find(m => m.id === memberId);
     if (!donor) return;
 
@@ -3358,7 +3370,7 @@ async function updateDonorDonationDateDirect(memberId) {
 
         closeCustomPopup();
         showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
-        
+
         // সমস্ত পরিবর্তন এবং UI রিফ্রেশ
         refreshAllData();
     } catch (err) {
@@ -3375,21 +3387,21 @@ let quickDonationMemberId = null;
 function openQuickDonationModal(memberId) {
     quickDonationMemberId = memberId;
     const donor = membersData.find(m => m.id === memberId);
-    
+
     if (donor) {
         document.getElementById('quickDonationDonorName').innerText = `রক্তদাতা: ${donor.name} (${donor.blood})`;
-        
-        // ডিফল্টভাবে ইনপুটে আজকের তারিখ DD/MM/YYYY ফরম্যাটে সেট করা
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            let mm = today.getMonth() + 1;
-            let dd = today.getDate();
-            if (dd < 10) dd = '0' + dd;
-            if (mm < 10) mm = '0' + mm;
 
-            document.getElementById('quickDonationDateInput').value = `${dd}/${mm}/${yyyy}`;
+        // ডিফল্টভাবে ইনপুটে আজকের তারিখ DD/MM/YYYY ফরম্যাটে সেট করা
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        let mm = today.getMonth() + 1;
+        let dd = today.getDate();
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+
+        document.getElementById('quickDonationDateInput').value = `${dd}/${mm}/${yyyy}`;
         document.getElementById('quickDonationIncrementCount').checked = true;
-        
+
         // মোডাল শো করা
         document.getElementById('quickDonationModal').style.display = 'flex';
     }
@@ -3456,7 +3468,7 @@ async function saveQuickDonationDate(event) {
         closeQuickDonationModal();
         closeCustomPopup();
         showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
-        
+
         refreshAllData(); // ব্লাড ব্যাংক রিফ্রেশ
     } catch (err) {
         closeCustomPopup();
@@ -3511,7 +3523,7 @@ async function saveQuickDonationDate(event) {
         closeQuickDonationModal();
         closeCustomPopup();
         showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
-        
+
         refreshAllData(); // ব্লাড ব্যাংক রিফ্রেশ
     } catch (err) {
         closeCustomPopup();
@@ -3523,7 +3535,7 @@ async function saveQuickDonationDate(event) {
 // নিরাপদ ও ক্রস-ব্রাউজার ডেট পার্সার (ক্রোম, সাফারি ও মোবাইল ব্রাউজার ফ্রেন্ডলি)
 function parseLocalDate(dateStr) {
     if (!dateStr) return null;
-    
+
     // YYYY-MM-DD ফরম্যাট চেক ও পার্সিং
     let parts = dateStr.split('-');
     if (parts.length === 3) {
@@ -3533,7 +3545,7 @@ function parseLocalDate(dateStr) {
         let date = new Date(y, m, d);
         if (!isNaN(date.getTime())) return date;
     }
-    
+
     // DD/MM/YYYY ফরম্যাট চেক ও পার্সিং
     let partsSlash = dateStr.split('/');
     if (partsSlash.length === 3) {
@@ -3543,7 +3555,7 @@ function parseLocalDate(dateStr) {
         let date = new Date(y, m, d);
         if (!isNaN(date.getTime())) return date;
     }
-    
+
     // সাধারণ ফলব্যাক
     let date = new Date(dateStr);
     return isNaN(date.getTime()) ? null : date;
@@ -3567,15 +3579,15 @@ window.autoTabDate = autoTabDate;
 function openQuickDonationModal(memberId) {
     quickDonationMemberId = memberId;
     const donor = membersData.find(m => m.id === memberId);
-    
+
     if (donor) {
         document.getElementById('quickDonationDonorName').innerText = `রক্তদাতা: ${donor.name} (${donor.blood})`;
-        
+
         // ডিফল্ট কোনো তারিখ লেখা থাকবে না, ৩টি ইনপুটই খালি করা হলো
         document.getElementById('quickDonationDay').value = "";
         document.getElementById('quickDonationMonth').value = "";
         document.getElementById('quickDonationYear').value = "";
-        
+
         document.getElementById('quickDonationIncrementCount').checked = true;
         document.getElementById('quickDonationModal').style.display = 'flex';
     }
@@ -3624,7 +3636,7 @@ async function saveQuickDonationDate(event) {
         closeQuickDonationModal();
         closeCustomPopup();
         showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
-        
+
         refreshAllData();
     } catch (err) {
         closeCustomPopup();
@@ -3648,15 +3660,15 @@ window.autoTabDate = autoTabDate;
 function openQuickDonationModal(memberId) {
     quickDonationMemberId = memberId;
     const donor = membersData.find(m => m.id === memberId);
-    
+
     if (donor) {
         document.getElementById('quickDonationDonorName').innerText = `রক্তদাতা: ${donor.name} (${donor.blood})`;
-        
+
         // ডিফল্ট কোনো তারিখ লেখা থাকবে না, ৩টি ইনপুটই খালি করা হলো
         document.getElementById('quickDonationDay').value = "";
         document.getElementById('quickDonationMonth').value = "";
         document.getElementById('quickDonationYear').value = "";
-        
+
         document.getElementById('quickDonationIncrementCount').checked = true;
         document.getElementById('quickDonationModal').style.display = 'flex';
     }
@@ -3707,7 +3719,7 @@ async function saveQuickDonationDate(event) {
         closeQuickDonationModal();
         closeCustomPopup();
         showCustomPopup("✅", `${donor.name} এর রক্তদানের তথ্য সফলভাবে আপডেট করা হয়েছে।`, true);
-        
+
         refreshAllData();
     } catch (err) {
         closeCustomPopup();
@@ -3739,7 +3751,7 @@ function editBloodDonor(memberId) {
         document.getElementById('editDonorLastDonationDay').value = d;
         document.getElementById('editDonorLastDonationMonth').value = m;
         document.getElementById('editDonorLastDonationYear').value = y;
-        
+
         document.getElementById('editDonorDonationCount').value = member.donation_count || 0;
         document.getElementById('editBloodDonorModal').style.display = 'flex';
     }
@@ -3798,26 +3810,27 @@ async function saveEditedBloodDonor(event) {
 async function saveLiveTickerText(event) {
     event.preventDefault();
     const text = document.getElementById('tickerTextInput').value.trim();
-    if(!text) {
+    if (!text) {
         showCustomPopup("⚠️", "দয়া করে ফাঁকা নোটিশ সেভ করবেন না।", true);
         return;
     }
-    
+
     showCustomPopup("⏳", "লাইভ নোটিশ ডাটাবেজে আপডেট হচ্ছে...", false);
     try {
         const { error } = await supabaseClient
             .from('admin_settings')
             .update({ ticker_text: text })
             .eq('id', 'config');
-            
+
         if (error) throw error;
-        
-        // হোম পেজে লাইভ নোটিশ পরিবর্তন করা
+
+        // হোম পেজে লাইভ নোটিশের গ্লোবাল ভেরিয়েবল এবং ভিউ সাথে সাথে আপডেট করা হলো
+        globalTickerText = text;
         const tickerEl = document.getElementById('liveTickerText');
         if (tickerEl) {
             tickerEl.innerText = text;
         }
-        
+
         closeCustomPopup();
         showCustomPopup("✅", "হোম পেজের লাইভ নোটিশ সফলভাবে আপডেট হয়েছে!", true);
     } catch (err) {
