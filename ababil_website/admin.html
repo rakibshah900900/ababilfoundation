@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>আবাবিল ফাউন্ডেশন - কোষাধ্যক্ষ প্যানেল</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css"> <!-- একই সিএসএস ফাইল ব্যবহার করতে পারবেন -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PWA Manifest Link -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Service Worker Registration Script -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('PWA Service Worker Registered!'))
+        .catch(err => console.log('Service Worker Registration Failed!', err));
+    });
+  }
+</script>
+</head>
+<body style="padding-bottom: 0px;">
+
+    <div class="app-container" style="padding-top: 20px; padding-bottom: 20px;">
+        <!-- হেডার -->
+        <header style="position: relative; top: 0; margin-bottom: 20px; width: 100%;">
+            <div class="header-left">
+                <img src="logo.png" alt="Logo" class="header-logo" onerror="this.src='https://via.placeholder.com/40'">
+                <h1 id="currentPageTitle">🔑 কোষাধ্যক্ষ ড্যাশবোর্ড</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-danger" onclick="logoutExec()" style="font-size: 11px; padding: 6px 12px;">🔒 লগআউট</button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <!-- ১. পাসওয়ার্ড দিয়ে প্রবেশ স্ক্রিন -->
+            <div id="executiveAuthContainer" style="max-width: 400px; margin: 50px auto;" class="card-container">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="logo.png" alt="Logo" style="width: 80px; height: 80px;" onerror="this.src='https://via.placeholder.com/48'">
+                    <h3 style="margin: 10px 0 0 0; color: var(--primary);">কোষাধ্যক্ষ লগইন</h3>
+                </div>
+
+                <div id="passwordEntryView">
+                    <div class="form-group">
+                        <label>অ্যাডমিন পাসওয়ার্ড দিন:</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="execPasswordInput" placeholder="পাসওয়ার্ড লিখুন" style="width: 100%; padding-right: 40px;">
+                            <span onclick="togglePasswordVisibility('execPasswordInput')" style="position: absolute; right: 12px; cursor: pointer; user-select: none; font-size: 16px;">👁️</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-large" style="margin-top: 14px;" onclick="verifyExecPassword()">🔓 প্রবেশ করুন</button>
+                    <p style="text-align: center; margin-top: 14px; font-size: 13px;">
+                        <a href="#" onclick="showResetPasswordView(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 700;">পাসওয়ার্ড ভুলে গেছেন?</a>
+                    </p>
+                </div>
+
+                <div id="resetRequestView" style="display: none;">
+                    <div class="form-group">
+                        <label>নিবন্ধিত জিমেইল দিন:</label>
+                        <input type="email" id="resetEmailInput" placeholder="example@gmail.com">
+                    </div>
+                    <button class="btn btn-secondary btn-large" style="margin-top: 14px;" onclick="sendResetCode()">📨 কোড পাঠান</button>
+                    <p style="text-align: center; margin-top: 14px; font-size: 13px;">
+                        <a href="#" onclick="showPasswordEntryView(); return false;" style="color: var(--text-muted); text-decoration: none;">← ফিরে যান</a>
+                    </p>
+                </div>
+
+                <div id="verifyCodeView" style="display: none;">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px; text-align: center;">জিমেইলের ওটিপি কোডটি লিখুন:</p>
+                    <div class="form-group">
+                        <input type="text" id="otpCodeInput" placeholder="------" maxlength="6" style="text-align: center; font-size: 18px; font-weight: 700; letter-spacing: 4px;">
+                    </div>
+                    <button class="btn btn-primary btn-large" style="margin-top: 14px;" onclick="verifyResetCode()">✅ কোড যাচাই করুন</button>
+                </div>
+
+                <div id="newPasswordView" style="display: none;">
+                    <div class="form-group">
+                        <label>নতুন পাসওয়ার্ড:</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="newPasswordInput" placeholder="নতুন পাসওয়ার্ড" style="width: 100%; padding-right: 40px;">
+                            <span onclick="togglePasswordVisibility('newPasswordInput')" style="position: absolute; right: 12px; cursor: pointer; user-select: none; font-size: 16px;">👁️</span>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>পাসওয়ার্ড নিশ্চিত করুন:</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="confirmNewPasswordInput" placeholder="পাসওয়ার্ড পুনরায়" style="width: 100%; padding-right: 40px;">
+                            <span onclick="togglePasswordVisibility('confirmNewPasswordInput')" style="position: absolute; right: 12px; cursor: pointer; user-select: none; font-size: 16px;">👁️</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-large" style="margin-top: 14px;" onclick="updateNewPassword()">💾 আপডেট করুন</button>
+                </div>
+            </div>
+
+            <!-- ২. প্রধান প্যানেল (লগইন করার পর দেখাবে) -->
+            <div id="execContentWrapper" style="display: none;">
+                <div class="filter-buttons" style="margin-bottom: 20px; overflow-x: auto; white-space: nowrap; padding-bottom: 5px;">
+                    <button id="tabBtnTarget" class="filter-btn active" onclick="switchExecutiveTab('targetSubSection')">📅 মাসিক ধার্য</button>
+                    <button id="tabBtnDetails" class="filter-btn" onclick="switchExecutiveTab('memberDetailsSubSection')">👥 সদস্য প্রোফাইল</button>
+                    <button id="tabBtnIncomeEntry" class="filter-btn" onclick="switchExecutiveTab('incomeEntrySubSection')">➕ আয় এন্ট্রি</button>
+                    <button id="tabBtnExpenseEntry" class="filter-btn" onclick="switchExecutiveTab('expenseEntrySubSection')">➖ ব্যয় এন্ট্রি</button>
+                    <button id="tabBtnProjectReport" class="filter-btn" onclick="switchExecutiveTab('projectReportSubSection')">📊 প্রজেক্ট রিপোর্ট</button>
+                    <button id="tabBtnLiveTicker" class="filter-btn" onclick="switchExecutiveTab('liveTickerSubSection')">📢 লাইভ নোটিশ</button>
+                </div>
+
+                <!-- ক. মাসিক ধার্য ট্যাব -->
+                <div id="targetSubSection" class="executive-sub-content">
+                    <div class="controls-panel">
+                        <div class="search-box-container">
+                            <input type="text" id="targetSearchInput" class="search-input" onkeyup="liveSearchTargetMembers()" placeholder="আইডি বা নাম দিয়ে খুঁজুন...">
+                        </div>
+                        <div class="filter-buttons">
+                            <button id="tgtBtnAll" class="filter-btn active" onclick="filterMembers('all')">সকল সদস্য</button>
+                            <button id="tgtBtnPaid" class="filter-btn" onclick="filterMembers('paid')">বকেয়ামুক্ত</button>
+                            <button id="tgtBtnDue" class="filter-btn" onclick="filterMembers('due')">বকেয়া তালিকা</button>
+                        </div>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="summary-card target-paid-bg">
+                            <span class="card-title">সংগঠনের সর্বমোট আদায়</span>
+                            <span class="card-amount" id="tgtTotalPaid">০/-</span>
+                        </div>
+                        <div class="summary-card target-due-bg">
+                            <span class="card-title">সংগঠনটির সর্বমোট বকেয়া</span>
+                            <span class="card-amount" id="tgtTotalDue">০/-</span>
+                        </div>
+                    </div>
+
+                    <div class="card-container">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>সদস্য আইডি</th>
+                                        <th>নাম</th>
+                                        <th>রশিদ</th>
+                                        <th>অ্যাকশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="targetTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- খ. সদস্য প্রোফাইল ট্যাব -->
+                <div id="memberDetailsSubSection" class="executive-sub-content" style="display: none;">
+                    <div class="section-header">
+                        <h3>👥 নিবন্ধিত সদস্য প্রোফাইল তালিকা</h3>
+                        <button class="btn btn-primary" onclick="openEntryModal()">➕ দ্রুত এন্ট্রি</button>
+                    </div>
+
+                    <div class="controls-panel" style="margin-bottom: 16px;">
+                        <div class="search-box-container">
+                            <input type="text" id="memberDetailsSearchInput" class="search-input" onkeyup="liveSearchMemberDetails()" placeholder="সদস্য আইডি, নাম বা মোবাইল নং খুঁজুন...">
+                        </div>
+                    </div>
+
+                    <div class="card-container">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>আইডি</th>
+                                        <th>নাম</th>
+                                        <th>অ্যাকশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="memberDetailsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- গ. আয় এন্ট্রি ট্যাব -->
+                <div id="incomeEntrySubSection" class="executive-sub-content" style="display: none;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                        <button id="btnSubTabGeneral" class="sub-tab-btn active" onclick="switchIncomeSubTab('general')">📊 সাধারণ আয়ের এন্ট্রি</button>
+                        <button id="btnSubTabDonation" class="sub-tab-btn" onclick="switchIncomeSubTab('donation')">📊 নতুন আয় যুক্তকরণ</button>
+                    </div>
+
+                    <!-- সাধারণ আয় -->
+                    <div id="generalIncomeSubView" style="display: block;">
+                        <div class="section-header">
+                            <h4 style="margin: 0; font-size: 14px; color: var(--secondary);">📋 সাধারণ আয়ের তালিকা</h4>
+                            <button class="btn btn-primary" onclick="openGeneralIncomeModal()">➕ নতুন সাধারণ আয়</button>
+                        </div>
+                        <div class="controls-panel" style="margin-bottom: 16px;">
+                            <input type="text" id="generalIncomeSearchInput" class="search-input" onkeyup="liveSearchGeneralIncome()" placeholder="রশিদ বা খাত বিবরণী দিয়ে খুঁজুন...">
+                        </div>
+                        <div class="card-container">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>রশিদ নং</th>
+                                            <th>খাত বিবরণী</th>
+                                            <th>অ্যাকশন</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="generalIncomeTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- দাতার অনুদান -->
+                    <div id="donationIncomeSubView" style="display: none;">
+                        <div class="section-header">
+                            <h4 style="margin: 0; font-size: 14px; color: var(--secondary);">📋 নতুন আয়ের তালিকা (দাতার অনুদান)</h4>
+                            <button class="btn btn-primary" onclick="openDonationModal()">➕ নতুন দাতার আয়</button>
+                        </div>
+                        <div class="controls-panel" style="margin-bottom: 16px;">
+                            <input type="text" id="donationIncomeSearchInput" class="search-input" onkeyup="liveSearchDonationIncome()" placeholder="রশিদ, নাম বা মোবাইল দিয়ে খুঁজুন...">
+                        </div>
+                        <div class="card-container">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>রশিদ নং</th>
+                                            <th>দাতার নাম</th>
+                                            <th>অবস্থা</th>
+                                            <th>অ্যাকশন</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="donationTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ঘ. ব্যয় এন্ট্রি ট্যাব -->
+                <div id="expenseEntrySubSection" class="executive-sub-content" style="display: none;">
+                    <div class="section-header">
+                        <h3>➖ ব্যয়ের খাত এন্ট্রি প্যানেল</h3>
+                        <button class="btn btn-danger" onclick="openExpenseModal()">➕ নতুন ব্যয় যুক্ত করুন</button>
+                    </div>
+                    <div class="controls-panel" style="margin-bottom: 16px;">
+                        <input type="text" id="expenseEntrySearchInput" class="search-input" onkeyup="liveSearchExpenseEntry()" placeholder="ভাউচার, খাত বা অনুমোদনকারী খুঁজুন...">
+                    </div>
+                    <div class="card-container">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ভাউচার নং</th>
+                                        <th>তারিখ</th>
+                                        <th>ব্যয়ের বিবরণী</th>
+                                        <th>অনুমোদনকারী</th>
+                                        <th>পরিমাণ</th>
+                                        <th>অবস্থা</th>
+                                        <th>অ্যাকশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="executiveExpenseTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ঙ. প্রজেক্ট এক্সেল রিপোর্ট ট্যাব -->
+                <div id="projectReportSubSection" class="executive-sub-content" style="display: none;">
+                    <div class="section-header">
+                        <h3>📊 প্রজেক্ট ভিত্তিক এক্সেল বিবরণী জেনারেটর</h3>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="form-group">
+                            <label>প্রজেক্টের নাম লিখুন:</label>
+                            <input type="text" id="reportProjectInput" oninput="generateProjectExcelReport()" placeholder="যেমন: ইফতার মাহফিল, মসজিদ প্রজেক্ট ইত্যাদি">
+                        </div>
+                    </div>
+
+                    <!-- এক্সেল রিপোর্ট ডিজাইন এরিয়া -->
+                    <div class="excel-sheet-wrapper">
+                        <div id="excelReportArea" class="excel-report-area">
+                            <div class="excel-watermark-container">
+                                <img src="logo.png" alt="Watermark" class="excel-watermark" onerror="this.style.display='none'">
+                            </div>
+                            <div class="excel-compact-header">
+                                <h2>আবাবিল ফাউন্ডেশন</h2>
+                                <p class="compact-sub-1">একটি সামাজিক স্বেচ্ছাসেবী সংগঠন</p>
+                                <p class="compact-sub-2">সূচীপাড়া, শাহরাস্তি, চাঁদপুর।</p>
+                                <div class="excel-header-meta-row">
+                                    <div class="meta-left"><strong>তারিখ:</strong> <span id="excelReportDate">--/--/----</span></div>
+                                    <div class="meta-right"><span id="excelProjectHeaderTitle" style="font-weight: 800; color: #1e40af;">--- হিসাব বিবরণী</span></div>
+                                </div>
+                            </div>
+
+                            <div class="excel-summary-grid">
+                                <div class="excel-sum-card card-income">
+                                    <div class="sum-card-texts"><span class="sum-card-title">মোট সংগ্রহ</span><span id="excelCardIncome" class="sum-card-amount">০/-</span></div>
+                                </div>
+                                <div class="excel-sum-card card-expense">
+                                    <div class="sum-card-texts"><span class="sum-card-title">মোট ব্যয়</span><span id="excelCardExpense" class="sum-card-amount">০/-</span></div>
+                                </div>
+                                <div class="excel-sum-card card-balance">
+                                    <div class="sum-card-texts"><span class="sum-card-title">অবशिष्ट ফান্ড</span><span id="excelCardBalance" class="sum-card-amount">০/-</span></div>
+                                </div>
+                            </div>
+
+                            <div class="excel-table-title"><span>আয়ের বিবরণী (সংগ্রহ)</span></div>
+                            <table class="excel-grid-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">ক্রমিক</th>
+                                        <th style="width: 45%;">দাতার নাম</th>
+                                        <th style="width: 20%;">ঠিকানা</th>
+                                        <th style="width: 20%;">পরিমাণ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="excelIncomeReportBody"></tbody>
+                                <tfoot>
+                                    <tr class="excel-total-row">
+                                        <td colspan="3" style="text-align: right; font-weight: bold;">সর্বমোট সংগ্রহ:</td>
+                                        <td id="excelTotalIncomeAmount" style="font-weight: 800; color: #1e40af;">০/-</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <div class="excel-table-title" style="margin-top: 12px;"><span>ব্যয়ের বিবরণী (খরচ)</span></div>
+                            <table class="excel-grid-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%;">তারিখ</th>
+                                        <th style="width: 45%;">ব্যয়ের খাত ও বিবরণ</th>
+                                        <th style="width: 20%;">অনুমোদনকারী</th>
+                                        <th style="width: 15%;">পরিমাণ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="excelExpenseReportBody"></tbody>
+                                <tfoot>
+                                    <tr class="excel-total-row">
+                                        <td colspan="3" style="text-align: right; font-weight: bold;">সর্বমোট ব্যয়:</td>
+                                        <td id="excelTotalExpenseAmount" style="font-weight: 800; color: #b91c1c;">০/-</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <div class="excel-compact-footer">
+                                <div class="excel-preparer-grid">
+                                    <div class="preparer-field"><label>প্রস্তুতকারী:</label><input type="text" id="excelPreparerName" placeholder="নাম" class="excel-line-input"></div>
+                                    <div class="preparer-field"><label>পদবী:</label><input type="text" id="excelPreparerDesignation" placeholder="পদবী" class="excel-line-input"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="downloadProjectExcelPDF()">📥 পিডিএফ ডাউনলোড</button>
+                        <button class="btn btn-secondary" onclick="exportProjectToCSV()">📂 এক্সেল ফাইল ডাউনলোড</button>
+                    </div>
+                </div>
+
+                <!-- চ. লাইভ নোটিশ আপডেট ট্যাব -->
+                <div id="liveTickerSubSection" class="executive-sub-content" style="display: none;">
+                    <div class="section-header">
+                        <h3>📢 লাইভ নোটিশ আপডেট প্যানেল</h3>
+                    </div>
+                    <div class="card-container">
+                        <form id="updateTickerForm" onsubmit="saveLiveTickerText(event)">
+                            <div class="form-group" style="margin-bottom: 14px;">
+                                <label>হোম পেজের লাইভ নোটিশটি লিখুন:</label>
+                                <textarea id="tickerTextInput" rows="4" required placeholder="এখানে যা লিখবেন তা সরাসরি হোম পেজের স্ক্রলিং বারে লাইভ দেখাবে..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-large">💾 নোটিশ আপডেট করুন</button>
+                        </form>
+                    </div>
+                </div>
+            </div> <!-- execContentWrapper এর শেষ -->
+        </div>
+    </div>
+
+    <!-- গ্লোবাল মোডালসমূহ (রিসেট, এন্ট্রি, এডিট মোডালসমূহ) -->
+    <!-- ১. কাস্টম পপআপ মোডাল -->
+    <div id="statusModal" class="modal">
+        <div class="modal-content" style="text-align: center; max-width: 350px;">
+            <div id="statusModalIcon" style="font-size: 40px; margin-bottom: 10px;">⏳</div>
+            <h3 id="statusModalTitle" style="color: var(--primary); margin: 0 0 16px 0; font-size: 16px;">লোড হচ্ছে...</h3>
+            <button id="statusModalBtn" class="btn btn-primary" onclick="closeCustomPopup()">ঠিক আছে</button>
+        </div>
+    </div>
+
+    <!-- ২. ডিলিট কনফার্মেশন মোডাল -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content" style="text-align: center; max-width: 380px;">
+            <div style="font-size: 44px; margin-bottom: 10px; color: var(--danger);">⚠️</div>
+            <h3 id="deleteModalMessage" style="color: var(--text-main); font-size: 15px; margin-bottom: 16px;">আপনি কি নিশ্চিত?</h3>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button id="btnDeleteYes" class="btn btn-danger" style="padding: 8px 20px;">হ্যাঁ</button>
+                <button onclick="closeDeleteModal()" class="btn" style="background-color: #cbd5e1; color: var(--text-main); padding: 8px 20px;">না</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ৩. সদস্য দ্রুত এন্ট্রি মোডাল -->
+    <div id="entryModal" class="modal" onclick="closeEntryModalOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeEntryModal()">&times;</span>
+            <h3 style="color: var(--primary); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">👤 সদস্য দ্রুত এন্ট্রি</h3>
+            <form id="newMemberForm" onsubmit="saveNewMember(event)">
+                <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="form-group"><label>সদস্য আইডি:</label><input type="text" id="autoMemberId" readonly></div>
+                    <div class="form-group"><label>সদস্যের নাম:</label><input type="text" id="newMemberName" required placeholder="নাম"></div>
+                    <div class="form-group">
+                        <label>সদস্যের ধরন:</label>
+                        <select id="newMemberTypeSelect" required onchange="handleShortFormTypeChange(this.value)">
+                            <option value="" disabled selected hidden>নির্বাচন করুন</option>
+                            <option value="মাসিক ধার্যকৃত সদস্য">মাসিক ধার্যকৃত সদস্য</option>
+                            <option value="সাধারণ সদস্য">সাধারণ সদস্য</option>
+                            <option value="স্থায়ী দাতা সদস্য">স্থায়ী দাতা সদস্য</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="shortFormAmountGroup"><label>ধার্যের পরিমাণ (টাকা):</label><input type="number" id="newMemberAmount" value="200"></div>
+                    <div class="form-group"><label>ঠিকানা:</label><input type="text" id="newMemberAddress" required placeholder="ঠিকানা"></div>
+                    <div class="form-group"><label>মোবাইল নম্বর:</label><input type="tel" id="newMemberPhone" required placeholder="01XXXXXXXXX"></div>
+                    <div class="form-group">
+                        <label>রক্তের গ্রুপ:</label>
+                        <select id="newMemberBlood" required>
+                            <option value="" disabled selected hidden>গ্রুপ নির্বাচন করুন</option>
+                            <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-large" style="margin-top: 14px;">💾 সংরক্ষণ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ৪. সদস্য পেমেন্ট এন্ট্রি মোডাল (পাসওয়ার্ড প্রোটেক্টেড এডিট ও পেমেন্ট) -->
+    <div id="memberProfileModal" class="modal" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeMemberModal()">&times;</span>
+            <div class="profile-card-header">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-info">
+                    <h3 id="profName">সদস্যের নাম</h3>
+                    <p>🆔 আইডি: <span id="profId" style="font-weight: 700;"></span></p>
+                    <p>👤 ধরন: <span id="profType" style="font-weight: 700; color: var(--primary);"></span></p>
+                    <p>📞 মোবাইল: <span id="profPhone"></span></p>
+                    <p>🩸 রক্তের গ্রুপ: <span id="profBlood" style="color: var(--danger); font-weight: 700;"></span></p>
+                    <p>📍 ঠিকানা: <span id="profAddress"></span></p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                <div class="summary-card target-paid-bg" style="padding: 10px; flex: 1;"><span class="card-title" style="font-size: 10px;">ধার্য</span><span class="card-amount" id="profFixedTarget" style="font-size: 16px;">০/-</span></div>
+                <div class="summary-card target-due-bg" style="padding: 10px; flex: 1;"><span class="card-title" style="font-size: 10px;">বকেয়া</span><span class="card-amount" id="profTotalDue" style="font-size: 16px;">০/-</span></div>
+                <div class="summary-card target-total-bg" style="padding: 10px; flex: 1;"><span class="card-title" style="font-size: 10px;">সর্বমোট জমা</span><span class="card-amount" id="profTotalPaid" style="font-size: 16px;">০/-</span></div>
+            </div>
+            <h4 id="monthListTitle" style="color: var(--primary); margin: 12px 0 6px 0; border-bottom: 1.5px solid var(--border); padding-bottom: 4px; font-size: 13.5px;">📅 ২০২৬ সালের চাঁদা পরিশোধ তালিকা</h4>
+            <div class="months-grid" id="monthsGridContainer"></div>
+            <div style="margin-top: 16px; text-align: right;"><button class="btn btn-primary" onclick="saveMemberModalChanges()">💾 পেমেন্ট সংরক্ষণ করুন</button></div>
+        </div>
+    </div>
+
+    <!-- ৫. সদস্য তথ্য সংশোধন মোডাল -->
+    <div id="editMemberModal" class="modal" onclick="closeEditModalOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeEditModal()">&times;</span>
+            <h3 style="color: var(--secondary); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">🔧 তথ্য সংশোধন প্যানেল</h3>
+            <form id="editMemberForm" onsubmit="saveEditedMember(event)">
+                <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="form-group"><label>সদস্য আইডি:</label><input type="text" id="editMemberId" readonly></div>
+                    <div class="form-group"><label>সদস্যের নাম:</label><input type="text" id="editMemberName" required></div>
+                    <div class="form-group"><label>ধার্য মাসিক (টাকা):</label><input type="number" id="editMemberFixedTarget" required></div>
+                    <div class="form-group"><label>মোবাইল নম্বর:</label><input type="tel" id="editMemberPhone" required></div>
+                    <div class="form-group"><label>ঠিকানা:</label><input type="text" id="editMemberAddress" required></div>
+                    <div class="form-group"><label>পেশা:</label><input type="text" id="editMemberProfession"></div>
+                    <div class="form-group">
+                        <label>রক্তের গ্রুপ:</label>
+                        <select id="editMemberBlood" required>
+                            <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-large" style="margin-top: 14px;">💾 আপডেট সংরক্ষণ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ৬. নতুন ব্যয়ের খাত মোডাল -->
+    <div id="expenseModal" class="modal" onclick="closeExpenseModalOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeExpenseModal()">&times;</span>
+            <h3 style="color: var(--danger); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">📉 নতুন ব্যয়ের খাত এন্ট্রি</h3>
+            <form id="expenseForm" onsubmit="saveExpenseEntry(event)">
+                <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="form-group"><label>ভাউচার নং:</label><input type="text" id="expVoucherNo" readonly></div>
+                    <div class="form-group"><label>তারিখ:</label><input type="date" id="expDate" required></div>
+                    <div class="form-group"><label>প্রজেক্টের নাম:</label><input type="text" id="expProject" placeholder="যেমন: ঈদ প্রজেক্ট ২০২৬, চিকিৎসা ইত্যাদি"></div>
+                    <div class="form-group"><label>ব্যয়ের বিবরণ:</label><input type="text" id="expSector" required placeholder="বিবরণী"></div>
+                    <div class="form-group"><label>ব্যয়ের পরিমাণ (টাকা):</label><input type="number" id="expAmount" required placeholder="টাকা"></div>
+                    <div class="form-group"><label>অনুমোদনকারী:</label><input type="text" id="expApprovedBy" required placeholder="অনুমোদনকারী"></div>
+                </div>
+                <button type="submit" class="btn btn-danger btn-large" style="margin-top: 14px;">💾 সংরক্ষণ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ৭. ব্যয়ের খাত এডিট মোডাল -->
+    <div id="editExpenseModal" class="modal" onclick="closeEditExpenseModalOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeEditExpenseModal()">&times;</span>
+            <h3 style="color: var(--danger); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">🔧 ব্যয়ের তথ্য সংশোধন</h3>
+            <form id="editExpenseForm" onsubmit="saveEditedExpenseEntry(event)">
+                <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="form-group"><label>ভাউচার নং:</label><input type="text" id="editExpVoucherNo" readonly></div>
+                    <div class="form-group"><label>তারিখ:</label><input type="date" id="editExpDate" required></div>
+                    <div class="form-group"><label>প্রজেক্টের নাম:</label><input type="text" id="editExpProject" placeholder="প্রজেক্টের নাম"></div>
+                    <div class="form-group"><label>ব্যয়ের বিবরণ:</label><input type="text" id="editExpSector" required placeholder="বিবরণী"></div>
+                    <div class="form-group"><label>ব্যয়ের পরিমাণ (টাকা):</label><input type="number" id="editExpAmount" required placeholder="টাকা"></div>
+                    <div class="form-group"><label>অনুমোদনকারী:</label><input type="text" id="editExpApprovedBy" required placeholder="অনুমোদনকারী"></div>
+                </div>
+                <button type="submit" class="btn btn-danger btn-large" style="margin-top: 14px;">💾 আপডেট সংরক্ষণ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ৮. দাতার অনুদান এন্ট্রি মোডাল -->
+    <div id="donationModal" class="modal" onclick="closeDonationModalOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeDonationModal()">&times;</span>
+            <h3 style="color: var(--primary); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">💰 নতুন আয়ের খাত এন্ট্রি</h3>
+            <form id="donationForm" onsubmit="saveDonationEntry(event)">
+                <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="form-group"><label>রশিদ নং:</label><input type="text" id="donReceiptNo" readonly></div>
+                    <div class="form-group"><label>তারিখ:</label><input type="date" id="donDate" required></div>
+                    <div class="form-group"><label>দাতার নাম:</label><input type="text" id="donName" required placeholder="দাতার নাম"></div>
+                    <div class="form-group"><label>ঠিকানা:</label><input type="text" id="donAddress" required placeholder="ঠিকানা"></div>
+                    <div class="form-group"><label>মোবাইল:</label><input type="tel" id="donPhone" placeholder="01XXXXXXXXX"></div>
+                    <div class="form-group"><label>প্রজেক্টের নাম:</label><input type="text" id="donProject" placeholder="যেমন: ইফতার প্রজেক্ট, বন্যা ত্রাণ ইত্যাদি"></div>
+                    <div class="form-group"><label>আয়ের বিবরণ:</label><input type="text" id="donSector" required placeholder="যেমন: সাধারণ অনুদান, যাকাত ইত্যাদি"></div>
+                    <div class="form-group"><label>আয়ের পরিমাণ (টাকা):</label><input type="number" id="donAmount" required placeholder="টাকার পরিমাণ"></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-large" style="margin-top: 14px;">💾 সংরক্ষণ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ৯. সাধারণ আয় এন্ট্রি মোডাল -->
+    <div id="generalIncomeModal" class="modal" onclick="closeGeneralIncomeModalOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeGeneralIncomeModal()">&times;</span>
+            <h3 style="color: var(--primary); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">➕ সাধারণ আয়ের এন্ট্রি</h3>
+            <form id="generalIncomeForm" onsubmit="saveGeneralIncomeEntry(event)">
+                <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="form-group" style="display: none;"><input type="text" id="genReceiptNo" readonly></div>
+                    <div class="form-group"><label>তারিখ:</label><input type="date" id="genDate" required></div>
+                    <div class="form-group"><label>প্রজেক্টের নাম:</label><input type="text" id="genProject" placeholder="যেমন: মসজিদ ফান্ড, সাধারণ সাহায্য ইত্যাদি"></div>
+                    <div class="form-group"><label>খাত বিবরণী:</label><input type="text" id="genSourceDesc" required placeholder="খাত বিবরণ লিখুন"></div>
+                    <div class="form-group"><label>পরিমাণ (টাকা):</label><input type="number" id="genAmount" required placeholder="টাকা"></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-large" style="margin-top: 14px;">💾 সংরক্ষণ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ১০. আয়ের বিবরণী এডিট মোডাল -->
+    <div id="editDonationModal" class="modal" onclick="closeEditDonationModalOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeEditDonationModal()">&times;</span>
+            <h3 style="color: var(--primary); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">🔧 আয়ের তথ্য সংশোধন</h3>
+            <form id="editDonationForm" onsubmit="saveEditedDonationEntry(event)">
+                <div class="form-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="form-group"><label>রশিদ নং:</label><input type="text" id="editDonReceiptNo" readonly></div>
+                    <div class="form-group"><label>তারিখ:</label><input type="date" id="editDonDate" required></div>
+                    <div class="form-group"><label>দাতার নাম:</label><input type="text" id="editDonName" required></div>
+                    <div class="form-group"><label>ঠিকানা:</label><input type="text" id="editDonAddress" required></div>
+                    <div class="form-group"><label>মোবাইল:</label><input type="tel" id="editDonPhone"></div>
+                    <div class="form-group"><label>প্রজেক্টের নাম:</label><input type="text" id="editDonProject" placeholder="প্রজেক্টের নাম"></div>
+                    <div class="form-group"><label>আয়ের বিবরণ:</label><input type="text" id="editDonSector" required></div>
+                    <div class="form-group"><label>আয়ের পরিমাণ (টাকা):</label><input type="number" id="editDonAmount" required></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-large" style="margin-top: 14px;">💾 আপডেট সংরক্ষণ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin_app.js"></script>
+</body>
+</html>
