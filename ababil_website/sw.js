@@ -46,3 +46,22 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
+// রিকোয়েস্ট হ্যান্ডলিং
+self.addEventListener('fetch', event => {
+  // Supabase API, EmailJS বা অন্য কোনো বাহ্যিক API রিকোয়েস্ট ক্যাশ থেকে বাদ দেওয়া হলো
+  if (event.request.url.includes('supabase.co') || event.request.url.includes('emailjs') || event.request.url.includes('api')) {
+    return; // সরাসরি নেটওয়ার্ক থেকে নতুন ডেটা আনবে
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // ক্যাশে ফাইলটি থাকলে ক্যাশ থেকে দেবে, অন্যথায় নেটওয়ার্ক থেকে লোড করবে
+        // নেটওয়ার্ক ফেইল হলে যাতে ERR_FAILED ক্র্যাশ না করে, সেজন্য .catch যোগ করা হয়েছে
+        return response || fetch(event.request).catch(err => {
+          console.log("Network fetch failed: ", err);
+        });
+      })
+  );
+});
