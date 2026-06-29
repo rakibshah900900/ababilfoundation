@@ -9,25 +9,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="css/style.css"> <!-- একই সিএসএস ফাইল ব্যবহার করতে পারবেন -->
+    <link rel="stylesheet" href="css/style.css"> 
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PWA Manifest Link -->
-<link rel="manifest" href="manifest.json">
+    
+    <link rel="manifest" href="manifest.json">
 
-<!-- Service Worker Registration Script -->
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('PWA Service Worker Registered!'))
-        .catch(err => console.log('Service Worker Registration Failed!', err));
-    });
-  }
-</script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('PWA Service Worker Registered!'))
+            .catch(err => console.log('Service Worker Registration Failed!', err));
+        });
+      }
+    </script>
 </head>
 <body style="padding-bottom: 0px;">
 
@@ -308,7 +307,7 @@
                                     <div class="sum-card-texts"><span class="sum-card-title">মোট ব্যয়</span><span id="excelCardExpense" class="sum-card-amount">০/-</span></div>
                                 </div>
                                 <div class="excel-sum-card card-balance">
-                                    <div class="sum-card-texts"><span class="sum-card-title">অবशिष्ट ফান্ড</span><span id="excelCardBalance" class="sum-card-amount">০/-</span></div>
+                                    <div class="sum-card-texts"><span class="sum-card-title">অবশিষ্ট ফান্ড</span><span id="excelCardBalance" class="sum-card-amount">০/-</span></div>
                                 </div>
                             </div>
 
@@ -383,7 +382,7 @@
         </div>
     </div>
 
-    <!-- গ্লোবাল মোডালসমূহ (রিসেট, এন্ট্রি, এডিট মোডালসমূহ) -->
+    <!-- গলোবাল মোডালসমূহ -->
     <!-- ১. কাস্টম পপআপ মোডাল -->
     <div id="statusModal" class="modal">
         <div class="modal-content" style="text-align: center; max-width: 350px;">
@@ -439,7 +438,7 @@
         </div>
     </div>
 
-    <!-- ৪. সদস্য পেমেন্ট এন্ট্রি মোডাল (পাসওয়ার্ড প্রোটেক্টেড এডিট ও পেমেন্ট) -->
+    <!-- ৪. সদস্য পেমেন্ট এন্ট্রি মোডাল -->
     <div id="memberProfileModal" class="modal" onclick="closeModalOutside(event)">
         <div class="modal-content">
             <span class="close-modal-btn" onclick="closeMemberModal()">&times;</span>
@@ -585,6 +584,110 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-large" style="margin-top: 14px;">💾 আপডেট সংরক্ষণ করুন</button>
             </form>
+        </div>
+    </div>
+
+    <!-- ১১. ডিজিটাল রশিদ ভিউয়ার মোডাল (নতুন যুক্ত করা হয়েছে) -->
+    <div id="receiptViewModal" class="modal" onclick="closeReceiptModalOutside(event)">
+        <div class="modal-content" style="max-width: 650px; width: 100%;">
+            <span class="close-modal-btn" onclick="closeReceiptModal()">&times;</span>
+            <h3 style="color: var(--primary); margin-top: 0; border-bottom: 1.5px solid var(--border); padding-bottom: 6px; font-size: 16px;">📄 ডিজিটাল রশিদ ভিউয়ার</h3>
+            
+            <!-- রশিদ ডিজাইন এরিয়া -->
+            <div class="receipt-card" id="printReceiptArea" style="margin: 15px auto; width: 100%; box-sizing: border-box;">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.04; pointer-events: none; z-index: 1;">
+                    <img src="logo.png" class="receipt-watermark" alt="Watermark" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'">
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #15803d; padding-bottom: 10px; margin-bottom: 14px; position: relative; z-index: 2;">
+                    <div>
+                        <h3 style="color: #15803d; font-size: 18px; font-weight: 700; margin: 0;">আবাবিল ফাউন্ডেশন</h3>
+                        <p style="font-size: 10.5px; color: var(--text-muted); margin: 2px 0 0 0;">একটি সামাজিক স্বেচ্ছাসেবী সংগঠন</p>
+                        <p style="font-size: 9.5px; color: var(--text-muted); margin: 1px 0 0 0;">সূচীপাড়া, শাহরাস্তি, চাঁদপুর।</p>
+                    </div>
+                    <div>
+                        <span style="background-color: #15803d; color: white; padding: 4px 10px; font-size: 12.5px; font-weight: 700; border-radius: 8px;">রশিদ (RECEIPT)</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 11px; color: #15803d; font-weight: 700; margin: 0; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%;">
+                            01720199092
+                        </p>
+                        <p style="font-size: 9.5px; color: var(--text-muted); margin: 1px 0 0 0;">অর্থবছর: ২০২৬</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; position: relative; z-index: 2;">
+                    <div>রশিদ নং: <span id="rNo" style="color: #15803d;">--</span></div>
+                    <div>তারিখ: <span id="rDate" style="color: #15803d;">--</span></div>
+                </div>
+
+                <div style="position: relative; z-index: 2; margin-bottom: 14px;">
+                    <!-- সদস্য রশিদ ভিউ -->
+                    <div id="memberReceiptView">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                            <tr>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left; width: 25%;">সদস্য আইডি</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border); font-weight: bold;" id="rId">--</td>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left; width: 25%;">সদস্যের নাম</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border); font-weight: bold;" id="rName">--</td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left;">ধার্য (মাসিক)</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border);" id="rTarget">--</td>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left;">সর্বশেষ জমা</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border); font-weight: bold; color: #15803d;" id="rAmount">--</td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left;">মাস বিবরণী</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border);" colspan="3" id="rMonths">--</td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left; color: #ff0000;">বকেয়ার পরিমাণ</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border); font-weight: bold; color: #fe0022;" colspan="3" id="rDue">--</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- অনুদান রশিদ ভিউ -->
+                    <div id="donationReceiptView" style="display: none;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                            <tr>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left; width: 25%;">দাতার নাম</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border); font-weight: bold;" colspan="3" id="donRName">--</td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left;">ঠিকানা</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border);" colspan="3" id="donRAddress">--</td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left;">মোবাইল</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border);" id="donRPhone">--</td>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); text-align: left;">দানের খাত</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border); font-weight: bold;" id="donRSector">--</td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 6px; border: 1.5px solid var(--border); color: #065f46;">দানের পরিমাণ</th>
+                                <td style="padding: 6px; border: 1.5px solid var(--border); font-weight: bold; color: #065f46;" colspan="3" id="donRAmount">--</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1.5px solid var(--border); padding-top: 10px; margin-top: 14px;">
+                    <div style="max-width: 60%; font-size: 10px; font-weight: 700; font-style: italic; color: #15803d;">
+                        “ আপনার খরচে আমাদের গরজে - একটু হাসি ফুটে উঠুক সবার মুখে ”
+                    </div>
+                    <div style="text-align: center; width: 160px;">
+                        <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 2px;">প্রস্তুতকারক:</span>
+                        <input type="text" id="receiptPreparedBy" placeholder="নাম লিখুন" style="width: 100%; border: none; border-bottom: 1.5px dashed #15803d; text-align: center; font-size: 11px; font-weight: bold; outline: none; background: transparent; padding: 2px 0; color: #1e40af;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-primary" onclick="downloadReceipt()">📥 ডাউনলোড</button>
+                <button class="btn btn-secondary" onclick="shareReceipt()">🔗 শেয়ার করুন</button>
+            </div>
         </div>
     </div>
 
