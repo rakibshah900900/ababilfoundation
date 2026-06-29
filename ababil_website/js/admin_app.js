@@ -226,7 +226,7 @@ function renderTargetTable(filter = 'all') {
 
         let badge = m.status === 'বকেয়া' ? 'badge-warning' : 'badge-success';
         let receiptStatusCell = m.receiptSent ?
-            `<span class="receipt-status-sent">রশিদ পাঠানো হয়েছে</span>` :
+            `<span class="receipt-status-sent" onclick="showMemberReceiptDirect('${m.id}')">রশিদ পাঠানো হয়েছে</span>` :
             `<span class="receipt-status-send" onclick="sendReceipt('${m.id}')">রশিদ পাঠান</span>`;
 
         html += `<tr style="border-bottom: 1.5px solid var(--border);">
@@ -314,7 +314,7 @@ window.addEventListener('click', function (e) {
     }
 });
 
-// রশিদের অপশন আপডেট করার ফাংশন
+// রশিদের অপশন আপডেট করার ফাংশন (ডিজিটাল রশিদ মোডাল খুলতে আপডেট করা হয়েছে)
 async function sendReceipt(memberId) {
     let member = membersData.find(m => m.id === memberId);
     if (member) {
@@ -327,12 +327,262 @@ async function sendReceipt(memberId) {
                 .eq('id', memberId);
             if (error) throw error;
             closeCustomPopup();
-            showCustomPopup("✅", "রশিদ তৈরি সম্পন্ন হয়েছে!", true);
-            loadAllDataFromSupabase();
+            renderTargetTable();
+            showMemberReceiptDirect(memberId); // সরাসরি রশিদ ওপেন হবে
         } catch (err) {
             closeCustomPopup();
             showCustomPopup("❌", "ত্রুটি: রশিদ তৈরি সফল হয়নি।", true);
         }
+    }
+}
+
+// সদস্যের রশিদ সরাসরি দেখানোর ফাংশন (নতুন যুক্ত করা হয়েছে)
+function showMemberReceiptDirect(memberId) {
+    const member = membersData.find(m => m.id === memberId);
+    if (member) {
+        document.getElementById('memberReceiptView').style.display = 'block';
+        document.getElementById('donationReceiptView').style.display = 'none';
+
+        document.getElementById('rNo').innerText = member.latestReceiptNo || 'AF-REC-1000';
+
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        const formattedDate = dd + '/' + mm + '/' + yyyy;
+
+        document.getElementById('rDate').innerText = formattedDate;
+        document.getElementById('rId').innerText = member.id;
+        document.getElementById('rName').innerText = member.name;
+
+        const targetDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") ? member.type : member.fixedTarget + '/-';
+        document.getElementById('rTarget').innerText = targetDisplay;
+        document.getElementById('rAmount').innerText = (member.lastPaid || 0) + '/-';
+
+        let monthsDisplay = '--';
+        if (Array.isArray(member.lastPaidMonths) && member.lastPaidMonths.length > 0) {
+            monthsDisplay = member.lastPaidMonths.join(', ');
+        } else if (typeof member.lastPaidMonths === 'string' && member.lastPaidMonths.trim() !== '') {
+            try {
+                let parsed = JSON.parse(member.lastPaidMonths);
+                if (Array.isArray(parsed)) {
+                    monthsDisplay = parsed.join(', ');
+                } else {
+                    monthsDisplay = member.lastPaidMonths;
+                }
+            } catch (e) {
+                monthsDisplay = member.lastPaidMonths;
+            }
+        }
+        document.getElementById('rMonths').innerText = monthsDisplay;
+
+        const dueDisplay = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" || member.type === "রক্তদাতা") ? '০/-' : (member.totalDue || 0) + '/-';
+        document.getElementById('rDue').innerText = dueDisplay;
+
+        document.getElementById('receiptViewModal').style.display = 'flex';
+    }
+}
+
+// অনুদানের রশিদ দেখানোর ফাংশন (নতুন যুক্ত করা হয়েছে)
+function showDonationReceiptDirect(receiptNo) {
+    const entry = donationEntries.find(e => e.receiptNo === receiptNo);
+    if (entry) {
+        document.getElementById('memberReceiptView').style.display = 'none';
+        document.getElementById('donationReceiptView').style.display = 'block';
+
+        document.getElementById('rNo').innerText = entry.receiptNo;
+        document.getElementById('rDate').innerText = entry.date;
+        document.getElementById('donRName').innerText = entry.name;
+        document.getElementById('donRAddress').innerText = entry.address;
+        document.getElementById('donRPhone').innerText = entry.phone || '---';
+        document.getElementById('donRSector').innerText = entry.sector;
+        document.getElementById('donRAmount').innerText = entry.amount + '/-';
+
+        document.getElementById('receiptViewModal').style.display = 'flex';
+    }
+}
+
+function closeReceiptModal() {
+    document.getElementById('receiptViewModal').style.display = 'none';
+}
+
+function closeReceiptModalOutside(event) {
+    if (event.target.id === 'receiptViewModal') {
+        closeReceiptModal();
+    }
+}
+
+// রশিদ পিডিএফ ডাউনলোড করার গ্লোবাল ফাংশন
+async function downloadReceipt() {
+    const preparerInput = document.getElementById('receiptPreparedBy');
+    const preparerName = preparerInput ? preparerInput.value.trim() : '';
+
+    // প্রস্তুতকারকের নাম খালি থাকলে সরাসরি ব্রাউজার অ্যালার্ট দেওয়া
+    if (!preparerName) {
+        alert("⚠️ প্রস্তুতকারকের নাম লিখুন!");
+        if (typeof showCustomPopup === 'function') {
+            showCustomPopup("⚠️", "দয়া করে রশিদের নিচে 'প্রস্তুতকারক' এর নাম লিখুন।", true);
+        }
+        return;
+    }
+
+    const element = document.getElementById('printReceiptArea');
+    if (!element) return;
+
+    let name = 'রশিদ';
+    let memberId = '';
+    const isMemberVisible = document.getElementById('memberReceiptView').style.display !== 'none';
+    if (isMemberVisible) {
+        name = document.getElementById('rName').innerText.trim() || 'সদস্য';
+        memberId = document.getElementById('rId').innerText.trim() || '';
+    } else {
+        name = document.getElementById('donRName').innerText.trim() || 'দাতা';
+    }
+
+    const cleanName = name.replace(/[^a-zA-Z0-9\u0980-\u09FF_]/g, '_').replace(/__+/g, '_');
+    const cleanMemberId = memberId.replace(/[^a-zA-Z0-9\u0980-\u09FF_]/g, '_').replace(/__+/g, '_');
+
+    const pdfFileName = (isMemberVisible && cleanMemberId)
+        ? `${cleanName}_${cleanMemberId}.pdf`
+        : `${cleanName}.pdf`;
+
+    if (typeof showCustomPopup === 'function') {
+        showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...", false);
+    }
+
+    const currentScrollY = window.scrollY;
+    window.scrollTo(0, 0);
+
+    try {
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        const opt = {
+            margin: [15, 10, 15, 10], // এ৫ পেজের মার্জিন
+            filename: pdfFileName,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: {
+                scale: 2.0, // মোবাইল ডিভাইসের কার্যক্ষমতার সাথে সামঞ্জস্য রেখে ২.০ স্কেল করা হয়েছে
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a5',
+                orientation: 'portrait'
+            }
+        };
+
+        // সরাসরি মোবাইলে ডাউনলোড হবে
+        await html2pdf().set(opt).from(element).save();
+
+        window.scrollTo(0, currentScrollY);
+        if (typeof closeCustomPopup === 'function') closeCustomPopup();
+        if (typeof showCustomPopup === 'function') {
+            showCustomPopup("✅", "পিডিএফ সরাসরি ডাউনলোড হয়েছে!", true);
+        }
+    } catch (error) {
+        console.error("PDF download error:", error);
+        window.scrollTo(0, currentScrollY);
+        if (typeof closeCustomPopup === 'function') closeCustomPopup();
+        alert("⚠️ পিডিএফ ডাউনলোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+    }
+}
+
+// রশিদ সরাসরি সোশ্যাল মিডিয়াতে শেয়ার করার গ্লোবাল ফাংশন
+async function shareReceipt() {
+    const preparerInput = document.getElementById('receiptPreparedBy');
+    const preparerName = preparerInput ? preparerInput.value.trim() : '';
+
+    // প্রস্তুতকারকের নাম খালি থাকলে সরাসরি ব্রাউজার অ্যালার্ট দেওয়া
+    if (!preparerName) {
+        alert("⚠️ প্রস্তুতকারকের নাম লিখুন!");
+        if (typeof showCustomPopup === 'function') {
+            showCustomPopup("⚠️", "দয়া করে রশিদের নিচে 'প্রস্তুতকারক' এর নাম লিখুন।", true);
+        }
+        return;
+    }
+
+    const element = document.getElementById('printReceiptArea');
+    if (!element) return;
+
+    let name = 'রশিদ';
+    let memberId = '';
+    const isMemberVisible = document.getElementById('memberReceiptView').style.display !== 'none';
+    if (isMemberVisible) {
+        name = document.getElementById('rName').innerText.trim() || 'সদস্য';
+        memberId = document.getElementById('rId').innerText.trim() || '';
+    } else {
+        name = document.getElementById('donRName').innerText.trim() || 'দাতা';
+    }
+
+    const englishName = transliterateBengaliToEnglish(name);
+    const cleanName = englishName.replace(/[^a-zA-Z0-9_]/g, '_').replace(/__+/g, '_');
+    const cleanMemberId = memberId.replace(/[^a-zA-Z0-9_]/g, '_').replace(/__+/g, '_');
+    const receiptNo = document.getElementById('rNo').innerText || 'AF-REC';
+
+    const pdfFileName = (isMemberVisible && cleanMemberId)
+        ? `${cleanName}_${cleanMemberId}.pdf`
+        : `${cleanName}.pdf`;
+
+    if (typeof showCustomPopup === 'function') {
+        showCustomPopup("⏳", "পিডিএফ তৈরি হচ্ছে...", false);
+    }
+
+    const currentScrollY = window.scrollY;
+    window.scrollTo(0, 0);
+
+    try {
+        await new Promise(resolve => setTimeout(resolve, 250));
+
+        const opt = {
+            margin: [15, 10, 15, 10],
+            filename: pdfFileName,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: {
+                scale: 2.0,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a5',
+                orientation: 'portrait'
+            }
+        };
+
+        // ব্রাউজারটি মোবাইল সিস্টেম শেয়ারিং সাপোর্ট করলে এবং লোকাল ফাইলে না থাকলে শেয়ার কল করবে
+        if (navigator.share) {
+            const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+            const file = new File([pdfBlob], pdfFileName, { type: "application/pdf" });
+
+            window.scrollTo(0, currentScrollY);
+            if (typeof closeCustomPopup === 'function') closeCustomPopup();
+
+            // ব্রাউজারের অফিশিয়াল শেয়ারিং অপশন ওপেন হবে (WhatsApp, Messenger, Facebook সহ সব অপশন থাকবে)
+            await navigator.share({
+                files: [file],
+                title: `${name} এর রশিদ`,
+                text: `আবাবিল ফাউন্ডেশন - রশিদ নং: ${receiptNo}`
+            });
+            
+            if (typeof showCustomPopup === 'function') {
+                showCustomPopup("✅", "শেয়ারিং সম্পন্ন হয়েছে!", true);
+            }
+        } else {
+            // যদি শেয়ারিং সাপোর্ট না করে (যেমন ডেস্কটপে বা লোকাল ফাইলে)
+            window.scrollTo(0, currentScrollY);
+            if (typeof closeCustomPopup === 'function') closeCustomPopup();
+            if (typeof showCustomPopup === 'function') {
+                showCustomPopup("ℹ️", "আপনার ব্রাউজারে সরাসরি শেয়ার করার সুবিধা নেই। রশিদটি ডাউনলোড করে শেয়ার করতে পারেন।", true);
+            }
+        }
+    } catch (error) {
+        console.error("Sharing failed:", error);
+        window.scrollTo(0, currentScrollY);
+        if (typeof closeCustomPopup === 'function') closeCustomPopup();
+        alert("⚠️ শেয়ার করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
     }
 }
 
@@ -548,7 +798,6 @@ function openMemberModal(id) {
         document.getElementById('profBlood').innerText = member.blood || '---';
         document.getElementById('profAddress').innerText = member.address || '---';
 
-        // 🎯 এই লাইনটি যুক্ত করা হলো (যা আগে বাদ পড়েছিল):
         document.getElementById('profFixedTarget').innerText = (member.type === "স্থায়ী দাতা সদস্য" || member.type === "সাধারণ সদস্য" ? member.type : member.fixedTarget + '/-');
 
         tempPaidMonths = [...member.paidMonths];
@@ -722,7 +971,7 @@ function showPasswordEntryView() {
     document.getElementById('newPasswordView').style.display = 'none';
 }
 
-// ৭. ওটিপি কোড জেনারেট ও ইমেইল পাঠানো
+// ওটিপি কোড জেনারেট ও ইমেইল পাঠানো
 async function sendResetCode() {
     const email = document.getElementById('resetEmailInput').value.trim().toLowerCase();
     if (!email) {
@@ -877,7 +1126,7 @@ function renderDonationTable() {
         let idx = donationEntries.indexOf(entry);
         let isGenerated = donationReceiptsStatus[entry.receiptNo];
         let receiptCell = isGenerated ?
-            `<span class="receipt-status-sent">রশিদ পাঠানো হয়েছে</span>` :
+            `<span class="receipt-status-sent" onclick="showDonationReceiptDirect('${entry.receiptNo}')">রশিদ পাঠানো হয়েছে</span>` :
             `<span class="receipt-status-send" onclick="generateDonationReceiptAction('${entry.receiptNo}')">রশিদ পাঠান</span>`;
 
         html += `<tr style="border-bottom: 1.5px solid var(--border);">
@@ -904,7 +1153,7 @@ function renderDonationTable() {
                     <p style="margin: 2px 0;"><strong>📍 ঠিকানা:</strong> ${entry.address}</p>
                     <p style="margin: 2px 0;"><strong>📂 খাত:</strong> ${entry.sector}</p>
                     <p style="margin: 2px 0;"><strong>📁 প্রজেক্ট:</strong> ${entry.project || '---'}</p>
-                    <p style="margin: 2px 0;"><strong>💰 পরিমাণ:</strong> ${entry.amount}/-</p>
+                    <p style="margin: 2px 0;"><strong>💰 পরিমাণ:</strong> ${entry.amount}/</p>
                 </div>
             </td>
         </tr>`;
@@ -916,13 +1165,13 @@ function generateDonationReceiptAction(receiptNo) {
     donationReceiptsStatus[receiptNo] = true;
     localStorage.setItem('ababil_donation_receipt_status', JSON.stringify(donationReceiptsStatus));
     renderDonationTable();
-    showCustomPopup("⏳", "রশিদ অ্যাক্টিভ হচ্ছে...", false);
+    showCustomPopup("⏳", "রশিদ তৈরি হচ্ছে...", false);
     setTimeout(async () => {
         try {
             await supabaseClient.from('donations').update({ receipt_sent: true }).eq('receiptNo', receiptNo);
         } catch (e) {}
         closeCustomPopup();
-        showCustomPopup("✅", "রশিদ সফলভাবে মার্ক করা হয়েছে!", true);
+        showDonationReceiptDirect(receiptNo); // সরাসরি রশিদ ওপেন হবে
     }, 1000);
 }
 
@@ -1581,3 +1830,12 @@ function liveSearchExpenseEntry() {
         }
     }
 }
+
+// ফাংশনসমূহ গ্লোবাল স্কোপে বাইন্ড করা হলো
+window.showMemberReceiptDirect = showMemberReceiptDirect;
+window.showDonationReceiptDirect = showDonationReceiptDirect;
+window.closeReceiptModal = closeReceiptModal;
+window.closeReceiptModalOutside = closeReceiptModalOutside;
+window.downloadReceipt = downloadReceipt;
+window.shareReceipt = shareReceipt;
+window.generateDonationReceiptAction = generateDonationReceiptAction;
