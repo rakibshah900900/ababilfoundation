@@ -690,6 +690,7 @@ function refreshAllData() {
         }
     }
     // ---------------------------------------------
+            updateDynamicStats(); 
 }
 
 function toggleTargetDetailsRow(id) {
@@ -3841,3 +3842,60 @@ async function saveLiveTickerText(event) {
 
 // গ্লোবাল স্কোপে এক্সপোর্ট করা
 window.saveLiveTickerText = saveLiveTickerText;
+
+// ১. বাংলা সংখ্যায় মসৃণ ও স্বয়ংক্রিয়ভাবে অ্যানিমেশন করার গ্লোবাল ফাংশন
+function animateBengaliCounter(elementId, actualValue) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    // ১০, ৫০ এর ডাইনামিক রাউন্ড লজিক দিয়ে টার্গেট সংখ্যা নির্ধারণ
+    let targetNum;
+    let suffix = "+";
+    
+    if (actualValue < 10) {
+        targetNum = actualValue;
+        suffix = ""; // ১০ এর কম হলে প্লাস চিহ্ন থাকবে না
+    } else if (actualValue >= 10 && actualValue <= 20) {
+        targetNum = 10;
+    } else if (actualValue > 100) {
+        targetNum = Math.floor((actualValue - 1) / 50) * 50;
+    } else {
+        targetNum = Math.floor((actualValue - 1) / 10) * 10;
+    }
+
+    let current = 0;
+    const duration = 1500; // ১.৫ সেকেন্ডে অ্যানিমেশন সম্পন্ন হবে
+    const steps = 50; // অ্যানিমেশন ফ্রেম রেট
+    const stepValue = targetNum / steps;
+    const stepTime = duration / steps;
+
+    // পূর্বে রানিং থাকা টাইমার বন্ধ করা
+    if (element.counterInterval) clearInterval(element.counterInterval);
+
+    element.counterInterval = setInterval(() => {
+        current += stepValue;
+        if (current >= targetNum) {
+            current = targetNum;
+            clearInterval(element.counterInterval);
+        }
+        // বাংলা সংখ্যায় রূপান্তর করে বসানো হচ্ছে
+        element.innerText = translateToBengaliNumber(Math.floor(current)) + suffix;
+    }, stepTime);
+}
+
+// ২. ডাটাবেজ লোড হওয়ার সাথে সাথে অ্যানিমেশন ট্রিগার করার মেইন ফাংশন
+function updateDynamicStats() {
+    // ক. মোট সক্রিয় সদস্য সংখ্যা বের করা
+    const totalMembers = membersData.filter(m => m.type !== "রক্তদাতা").length;
+
+    // খ. নিবন্ধিত রক্তদাতার সংখ্যা বের করা
+    const totalDonors = membersData.filter(m => m.blood && m.blood !== '---' && m.blood.trim() !== "").length;
+
+    // গ. সফল রক্তদানের সর্বমোট সংখ্যা (সকল মেম্বারদের 'donation_count' যোগফল)
+    const totalDonations = membersData.reduce((sum, m) => sum + (parseInt(m.donation_count) || 0), 0);
+
+    // ঘ. ৩টি কলামে বাংলা কাউন্টার অ্যানিমেশন চালু করা
+    animateBengaliCounter('statTotalMembers', totalMembers);
+    animateBengaliCounter('statTotalDonors', totalDonors);
+    animateBengaliCounter('statTotalDonations', totalDonations);
+}
