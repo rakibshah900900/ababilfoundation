@@ -2112,3 +2112,75 @@ html, body {
         text-overflow: ellipsis; /* বাটন লেখা বেশি বড় হলে ডট ডট দেখাবে */
     }
 }
+/* 📊 ছবির মতো বাঁকানো ওভারলে ও ফ্রেমলেস পরিসংখ্যান প্যানেল */
+.pbt-stats-overlay-container {
+    background-color: #ffffff !important;
+    border-radius: 40px 40px 14px 14px !important; /* উপরের কর্নার দুটি ছবির মতো বাঁকানো */
+    margin-top: -45px !important; /* ব্যানারের ওপর হালকা ওপরে উঠে ওভারল্যাপ করবে */
+    margin-bottom: 30px !important;
+    padding: 30px 20px !important;
+    box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.03), 0 10px 20px rgba(0, 0, 0, 0.02) !important;
+    position: relative;
+    z-index: 100; /* হিরো ব্যানারের ওপরে ভেসে থাকবে */
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.pbt-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pbt-stat-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+}
+
+/* কলামগুলোর মাঝে হালকা পার্টিশন বাউন্ডারি লাইন */
+.pbt-stat-col:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 15%;
+    height: 70%;
+    width: 1px;
+    background-color: #e2e8f0;
+}
+
+.pbt-stat-number {
+    font-size: 32px; /* ছবির মতো বড় এবং হাইলাইট নাম্বার */
+    font-weight: 900;
+    color: #05b82f; /* কালচে স্লটে কালার */
+    line-height: 1.1;
+    font-family: 'Roboto', 'Noto Serif Bengali', serif !important;
+}
+
+.pbt-stat-label {
+    font-size: 13.5px;
+    color: #64748b; /* হালকা ধূসর টেক্সট */
+    font-weight: 700;
+    margin-top: 6px;
+    line-height: 1.3;
+}
+
+/* mobile */
+@media (max-width: 768px) {
+    .pbt-stats-overlay-container {
+        border-radius: 30px 30px 10px 10px !important;
+        margin-top: -35px !important;
+        padding: 20px 10px !important;
+    }
+    .pbt-stat-number {
+        font-size: 20px !important;
+    }
+    .pbt-stat-label {
+        font-size: 10px !important;
+        margin-top: 3px !important;
+    }
+}
