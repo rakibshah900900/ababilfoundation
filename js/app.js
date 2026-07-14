@@ -107,6 +107,10 @@ function showConfirmModal(message, onConfirm) {
     document.getElementById('deleteConfirmModal').style.display = 'flex';
 }
 
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').style.display = 'none';
+}
+
 // ট্রাঙ্কেট করার ফাংশন
 function truncateText(text, maxLength, title) {
     if (!text) return '---';
