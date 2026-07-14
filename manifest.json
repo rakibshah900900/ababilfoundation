@@ -1,0 +1,21 @@
+{
+  "short_name": "আবাবিল কোষাধ্যক্ষ",
+  "name": "আবাবিল ফাউন্ডেশন কোষাধ্যক্ষ প্যানেল",
+  "icons": [
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./admin.html",
+  "background_color": "#1e40af",
+  "theme_color": "#1e40af",
+  "display": "standalone",
+  "orientation": "portrait"
+}
